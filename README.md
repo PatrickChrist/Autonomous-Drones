@@ -2,7 +2,7 @@
 Course material for the CDTM Elective Autonomous Drones
 
 ## Python-Intro
-Python-Intro contains code snipptes for the Lecture Introduction to Python
+Python-Intro contains code snippets for the Lecture Introduction to Python
 
 ## Python-ARDrone
 Python ARDrone is a clone of Ade Taylor libardrone

@@ -1,7 +1,11 @@
-from libardrone import libardrone
+import libardrone.libardrone as libardrone
 import cv2
 import numpy 
+import camShift
 
+def callbackMethod(x,y,lastX, lastY):
+	print str(x)+" "+str(y)+" last: "+str(lastX)+" "+str(lastY)
+ 
 def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
     centerX_prev = centerX
     centerY_prev= centerY
@@ -155,17 +159,15 @@ def fly():
                         stage = 1
                 elif (stage==1):
                     print "stage 2!!"
-                    #(var1,var2)=initCamShift(squareX,squareY,width,height,frame)
-                    initialized=False
-                    if (initialized==True):                  
-                        stage = 2
+                    camShiftHandler = camShift.CamShift(centerX,centerY,width,height,cap,callbackMethod)               
+                    stage = 2
                 elif (stage==2):
                     print "stage 3!"                    
-                    #(var1,var2)=camShift(var1,var2)
+                    frame = camShiftHandler.performCamShift()
                 #else:
                  #   "undefinded stage"        
             show_frame(frame)
-            
+ 
 def get_frame():
     try:
         pixelarray = drone.get_image()  # get an frame form the Drone

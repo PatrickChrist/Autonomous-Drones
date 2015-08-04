@@ -3,6 +3,7 @@
 import cv2 #import opencv
 import video
 import numpy as np
+import autopilot_agent as aa
 
 class AF(object):
     def __init__(self, video_src, window_name,drone):
@@ -54,6 +55,14 @@ class AF(object):
             if pixelarray != None: # check whether the frame is not empty
                 self.frame = pixelarray[:, :, ::-1].copy() #convert to a frame
 #            ret, self.frame = self.cam.read()
+                
+            size = self.frame.shape
+            act = aa.action(self.frame,size[1],size[0],0,0,0,0,0,0,0,0,0)
+            c = (int(act[1]*500),int(act[3]*500))
+            print size[1]/2,size[0]/2
+            cv2.line(self.frame,(size[1]/2,size[0]/2),((size[1]/2)+c[0],(size[0]/2)+c[1]),(255,0,0),2)        
+ #           coord_hist = (act[1],act[3])
+            
             vis = self.frame.copy()
             hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
             mask = cv2.inRange(hsv, np.array((0., 60., 32.)), np.array((180., 255., 255.)))

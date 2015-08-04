@@ -13,3 +13,5 @@ PS_Drone is the AR Drone lib by J. Philipp de Graaff http://www.playsheep.de/dro
 ## GetImage.py
 Code Snippet for accessing the Videostream of Parrot ARDrone 2.0 with Anaconda, OpenCV and FFMPEG.
 
+## scriptGettingStartedImages.py
+Code examples for Computer Vision and Image Processing Lecture by [Ahmad Ahmadi](http://campar.in.tum.de/Main/AhmadAhmadi) 

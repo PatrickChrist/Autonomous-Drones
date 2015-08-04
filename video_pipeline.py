@@ -11,4 +11,4 @@ class Pipeline:
         # will be called roughly every 33ms
         image = self.drone.get_image()
         # ...
-        cv2.imshow(self.cv_win, ...)
+        cv2.imshow(self.cv_win, "...")

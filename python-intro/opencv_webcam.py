@@ -16,6 +16,6 @@ while running:    # get current frame of video
         if cv2.waitKey(1) & 0xFF == 27:             # escape key pressed            
             running = False    
         else:        # error reading frame        
-		print 'error reading video feed'
+            print 'error reading video feed'
 cam.release()
 cv2.destroyAllWindows()

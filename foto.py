@@ -22,15 +22,14 @@ while running:
             if cv2.waitKey(1) & 0xFF == 27: #stop with esc
             # escape key pressed
                 running = False
-            
-            if cv2.waitKey(1) & 0xFF == 32: # detect space key press  
-                print "key pressed"
-                #namestring = "drone_frame"
-                #print namestring
-                imgcounter=imgcounter+1
-                namestring = "drone_frame" +str(imgcounter)+".jpg"
-                #save image                
-                cv2.imwrite(namestring, frame)
+                
+            # das funktioniert nicht
+#            if cv2.waitKey(1) == ord('a'): # detect a key press  
+#                print "a key pressed"
+#                imgcounter=imgcounter+1
+#                namestring = "drone_frame" +str(imgcounter)+".jpg"
+#                #save image                
+#                cv2.imwrite(namestring, frame)
 
     except:
         print "Failed"

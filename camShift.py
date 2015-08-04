@@ -24,8 +24,6 @@ class CamShift(object):
 
 		self.middleX = 0
 		self.middleY = 0
-		self.lastMiddleX = 0
-		self.lastMiddleY = 0
 
 	def performCamShift(self):
 		self.ret ,self.frame = self.cap.read()
@@ -46,15 +44,12 @@ class CamShift(object):
 			self.middleX = int(self.ret[0][0])
 			self.middleY = int(self.ret[0][1])
 			self.img2 = cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
-			return self.img2
-			#cv2.imshow('MyLittleDrony',self.img2)
 
 			#call event handler
-			self.callback(self.middleX, self.middleY, self.lastMiddleX, self.lastMiddleY)
+			self.callback(self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1]))
 
-			# update last value
-			self.lastMiddleX = self.middleX
-			self.lastMiddleY = self.middleY
+			return self.img2
+			#cv2.imshow('MyLittleDrony',self.img2)
 
 		else:
 			raise NameError('ret is false')

@@ -3,8 +3,8 @@ import cv2
 import numpy 
 import camShift
 
-def callbackMethod(x,y,lastX, lastY):
-	print str(x)+" "+str(y)+" last: "+str(lastX)+" "+str(lastY)
+def callbackMethod(x,y,minWidth):
+	print str(x)+" "+str(y)+" last: "+str(minWidth)
  
 def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
     centerX_prev = centerX
@@ -158,11 +158,11 @@ def fly():
                     if (success==True):
                         stage = 1
                 elif (stage==1):
-                    print "stage 2!!"
+                    print "stage 2"
                     camShiftHandler = camShift.CamShift(centerX,centerY,width,height,cap,callbackMethod)               
                     stage = 2
-                elif (stage==2):
-                    print "stage 3!"                    
+                    print "go to stage 3"
+                elif (stage==2):                   
                     frame = camShiftHandler.performCamShift()
                 #else:
                  #   "undefinded stage"        

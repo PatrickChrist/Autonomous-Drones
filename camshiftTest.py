@@ -93,10 +93,10 @@ class App(object):
                 term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
                 for i,value in enumerate(self.track_window):
                     if value<=0:
-                        print i,value
+                        #print i,value
                         self.track_window = (0,0,1000,1000)
                         break
-                print self.track_window
+                #print self.track_window
                 track_box, self.track_window = cv2.CamShift(prob, self.track_window, term_crit)
                 
                 if self.show_backproj:

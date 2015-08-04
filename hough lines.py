@@ -1,58 +1,52 @@
 # -*- coding: utf-8 -*-
 
-import libardrone.libardrone as libardrone #import the libardrone 
+#import libardrone.libardrone as libardrone #import the libardrone 
 import cv2 #import opencv
 import numpy as np
+import matplotlib as matplot
 
-#color detection try 1
-# define the list of boundaries
-# here it's only red in BGR
-boundaries = [
-    ([0, 0, 100], [70, 70, 255])
-    #([100, 0, 0], [255, 70, 70])
-]
 
-drone=libardrone.ARDrone(1,1) #initalize the Drone Object
-#bodenkamera
-#drone.set_camera_view(0)
-running = True
-while running:
-    try:
-        # This should be a numpy image array
-        pixelarray = drone.get_image() # get a frame form the Drone
-        if pixelarray != None: # check whether the frame is not empty
-            frame = pixelarray[:, :, ::-1].copy() #convert to a frame
-            # try to peint something on the image
-            cv2.rectangle(frame, (100, 100), (200, 200), (255,255,255), 2)
-            
-            # this is color detecion stuff
-            # loop over the boundaries
-            for (lower, upper) in boundaries:
-                # create NumPy arrays from the boundaries
-                lower = np.array(lower, dtype = "uint8")
-                upper = np.array(upper, dtype = "uint8")
-                
-                # find the colors within the specified boundaries and apply
-                # the mask
-                mask = cv2.inRange(frame, lower, upper)
-                output = cv2.bitwise_and(frame, frame, mask = mask)
-            
-            # print the height into the video
-#            text_height = "100"
-#            try:
-#                drone_data = drone.get_navdata()
-#                text_height = "" + drone_data[0]['altitude'] + ""
-#                
-#            except Exception:
-#                drone_data = drone_data
-#            print text_height
-#            cv2.putText(output, text_height, (100,100), cv2.FONT_HERSHEY_SIMPLEX, 2, 150) #Draw the text
+#load image
+img = cv2.imread('img.png', 1)
+#convert to HSV
+hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+#color ranges for red
+#from 0 to 20
+first_lower_red = np.array([0,50,50])
+first_upper_red = np.array([20,255,255])
+#from 160 to 180
+second_lower_red = np.array([160,50,50])
+second_upper_red = np.array([180,255,255])
+#make a mask from those 2 thresholds
+mask1 = cv2.inRange(hsv, first_lower_red, first_upper_red)
+mask2 = cv2.inRange(hsv, second_lower_red, second_upper_red)
+mask = cv2.add(mask1, mask2)
 
-            # Display the Image
-            cv2.imshow('Falco Drone', output) # show the frame
-            #cv2.imshow("Folce with Color Detection", np.hstack([frame, output]))
-            if cv2.waitKey(1) & 0xFF == 27: #stop with esc
-            # escape key pressed
-                running = False
-    except:
-        print "Failed"
+#put that mask on the pic
+res = cv2.bitwise_and(hsv, hsv, mask= mask)
+
+
+
+
+#######
+
+gray = cv2.cvtColor(hsv,cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(gray,100,250,apertureSize = 3)
+
+cv2.imshow('canny',edges)
+cv2.waitkey(0)
+#
+#lines = cv2.HoughLines(edges,1,np.pi/180,200)
+#for rho,theta in lines[0]:
+#    a = np.cos(theta)
+#    b = np.sin(theta)
+#    x0 = a*rho
+#    y0 = b*rho
+#    x1 = int(x0 + 1000*(-b))
+#    y1 = int(y0 + 1000*(a))
+#    x2 = int(x0 - 1000*(-b))
+#    y2 = int(y0 - 1000*(a))
+#
+#    cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+#
+#cv2.imwrite('houghlines3.jpg',img)

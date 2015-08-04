@@ -7,7 +7,7 @@ d=libardrone.ARDrone(1,1) #initalize the Drone Object
 
 
 """
-    controls:
+    CONTROLS:
         
     d.takeoff()
     d.hover()
@@ -24,6 +24,11 @@ d=libardrone.ARDrone(1,1) #initalize the Drone Object
     d.move_right()
     d.move_left()
     
-    d.speed() # 0.0 - 1.0
+    d.set_speed() # 0.0 - 1.0
+    
+    
+    VALUES:
+    
+    
     
 """

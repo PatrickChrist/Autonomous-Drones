@@ -54,19 +54,21 @@ def decision(img):
     #find lines
     lines = cv2.HoughLines(edges,1,np.pi/180,50)
     if lines is None:
-        decision = 0
+        decision = 2
     else:
         for rho,theta in lines[0]:
             a = np.cos(theta)
             b = np.sin(theta)
-            print "dX:", a
-            print "dY:", b
-            print "Steigung:", b / a
+            #print "dX:", a
+            #print "dY:", b
+            #print "Steigung:", b / a
             steigung = b / a
             if steigung > 0.2:
-                decision = 15
+                decision = 1
             elif steigung < -0.2:
-                decision = -15
+                decision = -1
+            else:
+                decision = 0
         
     return decision
     
@@ -76,8 +78,8 @@ def drone_action_left(online):
         drone.turn_left()
         time.sleep(0.5)
         drone.hover()
-    else:
-        print "turning right"
+    #else:
+        #print "turning right"
 
 def drone_action_right(online):
     if online:
@@ -85,47 +87,48 @@ def drone_action_right(online):
         drone.turn_right()
         time.sleep(0.5)
         drone.hover()
-    else:
-        print "turning left"
+    #else:
+        #print "turning left"
         
 def drone_action_down(online):
     if online:
         drone.move_down();
         time.sleep(0.1)
         drone.hover()
-    else:
-        print "moving down"
+    #else:
+        #print "moving down"
         
 def drone_action_up(online):
     if online:
         drone.move_up()
         time.sleep(0.1)
         drone.hover()
-    else:
-        print "moving up"
+    #else:
+        #print "moving up"
     
     
 def drone_control(a, b):
     global running  
     global online
     global drone
+    numFailed = 0
     
     drone = libardrone.ARDrone(1, 1)
-    if online:
-        drone.takeoff()
-        time.sleep(2)
+    #if online:
+    drone.takeoff()
+    time.sleep(2)
     
     #get image and decision loop
     running = True
     while running:
-        try:
+        #try:
             
             #first make sure the height is okay
-            altitude = drone.get_navdata()['altitude']
-            if altitude > 1200:
-                drone_action_down(online)
-            elif altitude < 500:
-                drone_action_up(online)
+            #altitude = drone.get_navdata()['altitude']
+            #if altitude > 1200:
+            #    drone_action_down(online)
+            #elif altitude < 500:
+            #    drone_action_up(online)
             
             pixelarray = drone.get_image() 
             if pixelarray != None:
@@ -134,18 +137,22 @@ def drone_control(a, b):
                 
                 turnDecision = decision(frame)
                 
-                if turnDecision < -10:
+                if turnDecision == -1:
                     drone_action_left(online)
-                elif turnDecision > 10:
+                elif turnDecision == 1:
                     drone_action_right(online)
-                else:
+                #elif turnDecision == 0:
                     #drone.move_forward()
-                    print "moving forward"
+                    #print "moving forward"
                 if cv2.waitKey(1) & 0xFF == 27:
                     running = False
                     
-        except:
-            print "Failed"
+        #except Exception:
+        #    print "Failed"
+        #    print Exception
+        #    numFailed = numFailed + 1
+        #    if numFailed > 10:
+        #        running = False
             
 def webcam_control(a, b):
     

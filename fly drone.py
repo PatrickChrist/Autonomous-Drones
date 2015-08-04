@@ -29,6 +29,18 @@ d=libardrone.ARDrone(1,1) #initalize the Drone Object
     
     VALUES:
     
+    d.get_navdata()
+                values = dict(zip(['ctrl_state', 'battery', 'theta', 'phi', 'psi', 'altitude', 'vx', 'vy', 'vz', 'num_frames'], values))
+    
+    n['altitude']
     
     
 """
+def data():    
+    navdata = d.get_navdata()
+    n= navdata[0]
+    alt = n['altitude']
+    
+#print 'altitude: ' + n['altitude']
+#print 'vx: ' + n['vx'] + ' vy: ' + n['vy'] + ' vz: ' + n['vz']
+

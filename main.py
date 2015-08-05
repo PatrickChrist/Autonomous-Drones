@@ -105,3 +105,19 @@ if __name__ == '__main__':
         pipeline.stop()
         time.sleep(1)
         cv2.destroyAllWindows()
+        print "done"
+        import psutil
+        import os
+
+        def kill_proc_tree(pid, including_parent=True):
+            parent = psutil.Process(pid)
+            children = parent.children(recursive=True)
+            for child in children:
+                child.kill()
+            psutil.wait_procs(children, timeout=5)
+            if including_parent:
+                parent.kill()
+                parent.wait(5)
+
+        me = os.getpid()
+        kill_proc_tree(me)

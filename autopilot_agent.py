@@ -61,15 +61,20 @@ def action(img_bytes, img_width, img_height, is_belly, ctrl_state, vbat_flying_p
     cv.SetData(image, img_bytes, img_width*3)
                  
     # Grab centroid of face
-    ctr = face_tracker.track(image)
+    ctr, faces = face_tracker.track(image)
 #    ctr = ball_tracker.track(image)
- 
+
+    dx = 0
+    dy = 0
+
     # Use centroid if it exists
-    if ctr:
+    if ctr and ctr != (-1, -1):
  
         # Compute proportional distance (error) of centroid from image center
         errx =  _dst(ctr, 0, img_width)
         erry = -_dst(ctr, 1, img_height)
+        dx = errx * img_width
+        dy = erry * img_height
  
         # Compute vertical, horizontal velocity commands based on PID control after first iteration
         if action.count > 0:
@@ -82,10 +87,16 @@ def action(img_bytes, img_width, img_height, is_belly, ctrl_state, vbat_flying_p
         action.phi_1 = phi
         action.gaz_1 = gaz
         action.count += 1
- 
+
+    if len(faces) > 1 or len(faces) == 0:
+        return 0, 0, 0, 0, 0, 0, 0, None
+
+    ((x, y, w, h), n) = faces[0]
+    size = (w, h)
+
     # Send control parameters back to drone
-    print (zap, phi, theta, gaz, yaw)
-    return (zap, phi, theta, gaz, yaw)
+    print (zap, phi, theta, gaz, yaw, dx, dy, size)
+    return (zap, phi, theta, gaz, yaw, dx, dy, size)
      
 # Simple PID controller from http://www.control.com/thread/1026159301
 def _pid(out_1, err, err_1, Kp, Ki, Kd):

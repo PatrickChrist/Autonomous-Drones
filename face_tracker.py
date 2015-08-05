@@ -40,6 +40,7 @@ def track(img, threshold=100):
     cv.EqualizeHist(small_img, small_img)
  
     center = (-1,-1)
+    faces = []
     #import ipdb; ipdb.set_trace()
     if(cascade):
         t = cv.GetTickCount()
@@ -47,7 +48,7 @@ def track(img, threshold=100):
         faces = cv.HaarDetectObjects(small_img, cascade, cv.CreateMemStorage(0), haar_scale, min_neighbors, haar_flags, min_size)
         t = cv.GetTickCount() - t
         if faces:
-            for ((x, y, w, h), n) in faces:
+            for ((x, y, w, h), n) in faces[0:1]:
                 # the input to cv.HaarDetectObjects was resized, so scale the
                 # bounding box of each face and convert it to two CvPoints
                 pt1 = (int(x * image_scale), int(y * image_scale))
@@ -68,7 +69,7 @@ def track(img, threshold=100):
      
 #    if cv.WaitKey(5) == 27:
 #        center = None
-    return center
+    return (center, faces)
  
 if __name__ == '__main__':
  

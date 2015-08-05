@@ -11,7 +11,7 @@ class Pipeline(threading.Thread):
         self.drone = drone
         self.interface = interface
         self.cv_win = "Fury"
-        self.af = autonomous_flight.AF(0, self.cv_win, self.drone)
+        self.af = autonomous_flight.AF(0, self.cv_win, self.drone, interface)
 
     def stop(self):
         self.af.stop()

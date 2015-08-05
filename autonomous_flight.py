@@ -7,7 +7,7 @@ import autopilot_agent as aa
 
 
 class AF(object):
-    def __init__(self, video_src, window_name,drone):
+    def __init__(self, video_src, window_name,drone, interface):
         self.drone = drone
         self.window_name = window_name
         self.cam = video.create_capture(video_src)
@@ -20,6 +20,7 @@ class AF(object):
         self.tracking_state = 0
         self.show_backproj = False
 
+        self.interface = interface
         self.running = True
 
     def stop(self):
@@ -54,6 +55,26 @@ class AF(object):
         img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
         cv2.imshow('hist', img)
 
+    def steer_to(self, right, down, size):
+        normalsize = (60.0, 60.0)  # floats sind wichtig
+        percent_of_size = (size[0] / normalsize[0] + size[1] / normalsize[1]) / 2.0
+
+        if right < -70:
+            self.interface.steer_autonomous("turnleft", 0.2)
+        elif right > 70:
+            self.interface.steer_autonomous("turnright", 0.2)
+        elif percent_of_size > 1.05: # too big, move away
+            self.interface.steer_autonomous("backward", 0.05)
+        elif percent_of_size < 0.95:
+            self.interface.steer_autonomous("forward", 0.05)
+        else:
+            self.interface.steer_autonomous("hover")
+
+        # if down < 0:
+        #     self.interface.steer_autonomous("forward", 0.1)
+        # else:
+        #     self.interface.steer_autonomous("backward", 0.1)
+
     def run(self):
         while self.running:
             # This should be an numpy image array
@@ -64,10 +85,13 @@ class AF(object):
                 
             size = self.frame.shape
             act = aa.action(self.frame,size[1],size[0],0,0,0,0,0,0,0,0,0)
-            c = (int(act[1]*500),int(-act[3]*500))
-            print size[1]/2,size[0]/2
+            c = (int(act[5]),int(-act[6]))
+            # print size[1]/2,size[0]/2
             cv2.line(self.frame,(size[1]/2,size[0]/2),((size[1]/2)+c[0],(size[0]/2)+c[1]),(255,0,0),2)
  #           coord_hist = (act[1],act[3])
+
+            if act[7] is not None:  # no face found
+                self.steer_to(act[5], act[6], act[7])
             
             vis = self.frame.copy()
             hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
@@ -105,11 +129,12 @@ class AF(object):
                 try:
                     cv2.ellipse(vis, track_box, (0, 0, 255), 2)
                 except:
-                    print track_box
+                    pass
+                    # print track_box
 
             cv2.imshow(self.window_name, vis)
 
-            ch = 0xFF & cv2.waitKey(5)
+            ch = 0xFF & cv2.waitKey(50)
             if ch == 27:
                 break
             if ch == ord('b'):

@@ -64,13 +64,14 @@ def fly():
     running = True
     return_to_hover = False
     flying = False
-    stage = 0 #stages: 0=find circle, 1=init camshift, 2=use camshift
+    stage = 0 #stages: 0=hover, 1=find circle, 1=use camshift
     
     #variables for the circle detector
-    counter,centerX,centerY, radius, inbox_width_and_height= 0,0,0,0,0   
+    counter,centerX,centerY, radius, inbox_width_and_height, initialEdgeLength = 0,0,0,0,0,0  
+
     while running:
         keyPressed = True
-        key = cv2.waitKey(33)
+        key = cv2.waitKey(15)
 
         #if (key!=-1):
             #keyPressed = False
@@ -87,7 +88,6 @@ def fly():
         if key == ord('p'):
             drone.reset()
             continue
-
         if not flying:
             if key == 1048608 or key==ord(' '):
                 drone.takeoff()
@@ -130,6 +130,8 @@ def fly():
                 drone.speed = 0.5
             elif key == 1048628 or key==ord('4'):
                 drone.speed = 0.9
+            elif key == ord('x') and stage == 0
+                stage = 1
             else:
                 if return_to_hover:
                     return_to_hover = False
@@ -138,24 +140,32 @@ def fly():
         frame = get_frame()
         if (frame != None):
             if (keyPressed == False):
-                if (stage==0):
+                if (stage==1):
                     (success,frame,counter,centerX,centerY,radius,inbox_width_and_height) = detectCircle(counter,frame,centerX,centerY,radius)
-                    print "counter: " + str(counter)
                     if (success==True):
-                        stage = 1
-                elif (stage==1):
-                    print "stage 2"
-                    camShiftHandler = camShift.CamShift(centerX,centerY,inbox_width_and_height,inbox_width_and_height,frame)               
-                    stage = 2
-                    print "go to stage 3"
+                        stage = 2
+                        initialEdgeLength = width
+                        print "Initialize Camshift"
+                        camShiftHandler = camShift.CamShift(centerX,centerY,inbox_width_and_height,inbox_width_and_height,frame)               
+                        print "go to stage 2"
                 elif (stage==2):                    
                     frame, middleX, middleY, minWidth = camShiftHandler.performCamShift(frame)
                     print str(middleX)+" "+str(middleY)+" minWidth: "+str(minWidth)
+                    currentEdgeLength = minWidth
+                    edgeLengthRatio = 1 - currentEdgeLength/initialEdgeLength #if object is farther away than at the starting time, then the ratio is > 0
+                    #rotation
                     drone.speed = 0.6
-                    if middleX < 240:
-                        drone.turn_left()
-                    elif middleX > 400:
-                        drone.turn_right()
+                    #if middleX < 240:
+                    #    drone.turn_left()
+                    #elif middleX > 400:
+                    #    drone.turn_right()
+                    #approach or distance from target object
+                    if (edgeLengthRatio > 0.6):
+                        drone.spped = 0.2
+                        drone.move_forward()
+                    elif (edgeLengthRatio < -0.3):
+                        drone.speed = 0.2
+                        drone.move_backward()
                     else:
                         drone.hover()
 

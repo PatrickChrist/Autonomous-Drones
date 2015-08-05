@@ -1,6 +1,14 @@
 import numpy as np
 import cv2
 
+usesOpenCV3 = False
+
+def boxPoints(ret):
+	if (usesOpenCV3 == True):
+		return cv2.boxPoints(ret)
+	else:
+		return cv2.cv.BoxPoints(ret)
+
 class CamShift(object):
 	def __init__(self,c,r,w,h,initialCamImage):
 
@@ -24,6 +32,8 @@ class CamShift(object):
 		self.middleY = 0
 		self.pts = []
 
+
+
 	def performCamShift(self, camImage):
 		self.frame = camImage
 
@@ -44,14 +54,15 @@ class CamShift(object):
 			self.ret, self.track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)
 
 			# Draw rectangle on image
-			self.pts = cv2.boxPoints(self.ret)
+			self.pts = boxPoints(self.ret)
 			self.pts = np.int0(self.pts)
-			self.img2 = cv2.polylines(self.frame,[self.pts],True, 255,2)
+			self.img2 = self.frame.copy()
+			cv2.polylines(self.img2,[self.pts],True, 255,2)
 
 			# Draw middlepunkt on image
 			self.middleX = int(self.ret[0][0])
 			self.middleY = int(self.ret[0][1])
-			self.img2 = cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
+			cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
 
 			return self.img2, self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1])
 

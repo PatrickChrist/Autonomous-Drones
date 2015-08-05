@@ -2,12 +2,10 @@ import numpy as np
 import cv2
 
 class CamShift(object):
-	def __init__(self,c,r,w,h,cap,callback):
-		self.cap = cap
-		self.callback = callback
+	def __init__(self,c,r,w,h,initialCamImage):
 
 		# take first frame of the video
-		self.ret, self.frame = self.cap.read()
+		self.frame = initialCamImage
 
 		# setup initial location of window
 		self.track_window = (int(c),int(r),int(w),int(h))
@@ -25,12 +23,15 @@ class CamShift(object):
 		self.middleX = 0
 		self.middleY = 0
 
-	def performCamShift(self):
-		self.ret ,self.frame = self.cap.read()
+	def performCamShift(self, camImage):
+		self.frame = camImage
 
-		if self.ret == True:
+		if self.frame != None and self.frame != []:
 			self.hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
 			self.dst = cv2.calcBackProject([self.hsv],[0],self.roi_hist,[0,180],1)
+			
+			# Thresholden / dichte bestimmen
+			#cv2.imshow('calcBack', self.dst)
 
 			# apply meanshift to get the new location
 			self.ret, self.track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)
@@ -45,18 +46,13 @@ class CamShift(object):
 			self.middleY = int(self.ret[0][1])
 			self.img2 = cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
 
-			#call event handler
-			self.callback(self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1]))
-
-			return self.img2
-			#cv2.imshow('MyLittleDrony',self.img2)
+			return self.img2, self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1])
 
 		else:
 			raise NameError('ret is false')
 	 
 	def close(self):
 	 	cv2.destroyAllWindows()
-		self.cap.release()
 
 
 

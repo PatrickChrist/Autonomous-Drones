@@ -1,10 +1,7 @@
 import libardrone.libardrone as libardrone
 import cv2
 import numpy 
-import camShift
-
-def callbackMethod(x,y,minWidth):
-	print str(x)+" "+str(y)+" last: "+str(minWidth)
+import camShift  
  
 def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
     centerX_prev = centerX
@@ -52,16 +49,16 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
             centerY_prev=centerY
             radius_prev=radius
             print "diffRadius: " + str(diffRadius)+ ", diffX: " + str(diffX)+ ", diffY: " + str(diffY) 
-            if  diffRadius< 50 and  diffX< 25 and  diffY< 25:
+            if  diffRadius< 30 and  diffX< 40 and  diffY< 40:
                 sameCircleCounter+=1
             else:
                 sameCircleCounter = 0
             print "counter: " + str (sameCircleCounter)
-            if sameCircleCounter > 10:
+            if sameCircleCounter > 7: 
                 print "Call Meanshift now!"
                 #left upper corner:
-                corner_x=centerX-width
-                cornter_Y=centerY-width
+                centerX=centerX
+                centerY=centerY
                 width = width
                 height = height
                 success = True
@@ -75,10 +72,6 @@ def fly():
     flying = False
     stage = 0 #stages: 0=find circle, 1=init camshift, 2=use camshift
     
-    #webcam
-    cap = cv2.VideoCapture(0)
-    
-    
     #variables for the circle detector
     counter,centerX,centerY, radius,width,height = 0,0,0,0,0,0    
     while running:
@@ -91,9 +84,10 @@ def fly():
         if (key==-1):
             keyPressed = False
         #    print str(key)
-        if key == (1048603 or 27):  # esc
+        if key == 1048603 or key == 27:  # esc
             if flying:
                 drone.land()
+            cv2.destroyAllWindows()
             running = False
             continue
         if key == ord('p'):
@@ -147,25 +141,30 @@ def fly():
                     return_to_hover = False
                     drone.hover()
 
-        #frame = get_frame()
-        frame = get_frame_(cap)
+        frame = get_frame()
         if (frame != None):
             if (keyPressed == False):
                 if (stage==0):
-                    #(found, squareX, squareY, width,height) = detectcircle(frame)
                     (success,frame,counter,centerX,centerY,radius,width,height) = detectCircle(counter,frame,centerX,centerY,radius)
                     print "counter: " + str(counter)
                     if (success==True):
                         stage = 1
                 elif (stage==1):
                     print "stage 2"
-                    camShiftHandler = camShift.CamShift(centerX,centerY,width,height,cap,callbackMethod)               
+                    camShiftHandler = camShift.CamShift(centerX,centerY,width,height,frame)               
                     stage = 2
                     print "go to stage 3"
-                elif (stage==2):                   
-                    frame = camShiftHandler.performCamShift()
-                #else:
-                 #   "undefinded stage"        
+                elif (stage==2):                    
+                    frame, middleX, middleY, minWidth = camShiftHandler.performCamShift(frame)
+                    print str(middleX)+" "+str(middleY)+" minWidth: "+str(minWidth)
+                    drone.speed = 0.6
+                    if middleX < 240:
+                        drone.turn_left()
+                    elif middleX > 400:
+                        drone.turn_right()
+                    else:
+                        drone.hover()
+
             show_frame(frame)
  
 def get_frame():
@@ -193,15 +192,15 @@ def show_frame(frame):
 
 
 if __name__ == '__main__':
-    drone = libardrone.ARDrone(True, True)
+    drone = libardrone.ARDrone(True, False)
     cv2.imshow('Drone', numpy.zeros((10, 10)))
 
     try:
         fly()
     except Exception, e:
-        print "Going down.", e
-        drone.land()
+        print "Going down because of exception.", e
     finally:
-        drone.halt()
+        print "Going down on close"
+        drone.land()
         cv2.destroyAllWindows()
 

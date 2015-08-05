@@ -80,7 +80,7 @@ def init():
     drone.reset()
 
 
-drone = libardrone.ARDrone(True, True)
+drone = libardrone.ARDrone(True, False)
 global interface
 interface = Tower(drone)
 

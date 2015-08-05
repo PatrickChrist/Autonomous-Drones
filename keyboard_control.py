@@ -2,10 +2,12 @@ __author__ = 'Benedikt'
 
 from main import interface
 
+
 class KeyboardControl:
     def __init__(self, drone):
         self.drone = drone
-        self.manual_control = False
+        self.return_to_hover = False
+        self.speed = 0.3
 
     """ on_key(key)
         :param key: keycode from cv2
@@ -18,55 +20,45 @@ class KeyboardControl:
 
         if key == ord('p'):
             interface.steer_manual("reset")
-
-        if not flying:
-            if key == ord(' '):
-                drone.takeoff()
-                drone.hover()
-                flying = True
+        elif key == ord('t'):
+            interface.set_manual_mode(False)
+        elif key == ord(' '):
+            interface.steer_manual('toggle_flying')
+        elif key == ord('w'):
+            self.return_to_hover = True
+            interface.steer_manual("forward", speed=self.speed)
+        elif key == ord('a'):
+            self.return_to_hover = True
+            interface.steer_manual("left", speed=self.speed)
+        elif key == ord('s'):
+            self.return_to_hover = True
+            interface.steer_manual("backward", speed=self.speed)
+        elif key == ord('d'):
+            self.return_to_hover = True
+            interface.steer_manual("right", speed=self.speed)
+        elif key == ord('q'):
+            self.return_to_hover = True
+            interface.steer_manual("turnleft", speed=self.speed)
+        elif key == ord('e'):
+            self.return_to_hover = True
+            interface.steer_manual("turnright", speed=self.speed)
+        elif key == 2490368:  # up
+            self.return_to_hover = True
+            interface.steer_manual("up", speed=self.speed)
+        elif key == 2621440:  # down
+            self.return_to_hover = True
+            interface.steer_manual("down", speed=self.speed)
+        elif key == ord('1'):
+            self.speed = 0.1
+        elif key == ord('2'):
+            self.speed = 0.3
+        elif key == ord('3'):
+            self.speed = 0.5
+        elif key == ord('4'):
+            self.speed = 0.9
         else:
-            if key == ord(' '):
-                drone.hover()
-                drone.land()
-                flying = False
-            elif key == ord('w'):
-                return_to_hover = True
-                drone.move_forward()
-            elif key == ord('a'):
-                return_to_hover = True
-                drone.move_left()
-            elif key == ord('s'):
-                return_to_hover = True
-                drone.move_backward()
-            elif key == ord('d'):
-                return_to_hover = True
-                drone.move_right()
-            elif key == ord('q'):
-                return_to_hover = True
-                drone.turn_left()
-            elif key == ord('e'):
-                return_to_hover = True
-                drone.turn_right()
-            elif key == 2490368:  # up
-                return_to_hover = True
-                drone.move_up()
-            elif key == 2621440:  # down
-                return_to_hover = True
-                drone.move_down()
-            elif key == ord('1'):
-                drone.speed = 0.1
-            elif key == ord('2'):
-                drone.speed = 0.3
-            elif key == ord('3'):
-                drone.speed = 0.5
-            elif key == ord('4'):
-                drone.speed = 0.9
-            else:
-                if return_to_hover:
-                    return_to_hover = False
-                    drone.hover()
+            if self.return_to_hover:
+                self.return_to_hover = False
+                interface.steer_manual("hover")
 
-            return True
-
-    def manual_controlled(self):
-        return self.manual_control
+        return True

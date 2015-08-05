@@ -81,14 +81,15 @@ def init():
 
 
 drone = libardrone.ARDrone(True, True)
+global interface
 interface = Tower(drone)
 
 
 if __name__ == '__main__':
-    keyboard = keyboard_control.KeyboardControl(drone)
-    pipeline = video_pipeline.Pipeline(drone)
+    keyboard = keyboard_control.KeyboardControl(drone, interface)
+    pipeline = video_pipeline.Pipeline(drone, interface)
     pipeline.daemon = True
-    cv2.imshow('Drone', numpy.zeros((10, 10)))
+    cv2.imshow('Fury', numpy.zeros((10, 10)))
 
     try:
         init()

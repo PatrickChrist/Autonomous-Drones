@@ -1,13 +1,8 @@
 #!/usr/bin/python
  
 # file: /opencv/face_tracker.py
- 
-import sys
-import time
-import math
-import datetime
-import serial
-import cv
+
+import cv2.cv as cv
  
 # Parameters for haar detection
 # From the API:

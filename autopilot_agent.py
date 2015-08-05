@@ -34,9 +34,9 @@ Kdy = 0.25
 Kix = 0
 Kiy = 0
  
-import cv
+import cv2.cv as cv
 import face_tracker
-import ball_tracker
+# import ball_tracker
  
 # Routine called by C program.
 def action(img_bytes, img_width, img_height, is_belly, ctrl_state, vbat_flying_percentage, theta, phi, psi, altitude, vx, vy):

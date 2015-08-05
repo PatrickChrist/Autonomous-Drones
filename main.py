@@ -51,6 +51,12 @@ class Tower:  # controlls the drone movements
             self.drone.reset()
         if command == "hover":
             self.drone.hover()
+        if command == "toggle_flying":
+            if self.flying:
+                self.drone.land()
+            else:
+                self.drone.takeoff()
+            self.flying = not self.flying
 
     def steer_manual(self, command, speed=0.3):
         self.set_manual_mode(True)
@@ -68,7 +74,6 @@ def main_loop():
     while running:
         key = cv2.waitKey(33)
         running = keyboard.on_key(key)
-
 
 
 def init():

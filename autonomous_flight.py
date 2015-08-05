@@ -64,9 +64,9 @@ class AF(object):
                 
             size = self.frame.shape
             act = aa.action(self.frame,size[1],size[0],0,0,0,0,0,0,0,0,0)
-            c = (int(act[1]*500),int(act[3]*500))
+            c = (int(act[1]*500),int(-act[3]*500))
             print size[1]/2,size[0]/2
-            cv2.line(self.frame,(size[1]/2,size[0]/2),((size[1]/2)+c[0],(size[0]/2)+c[1]),(255,0,0),2)        
+            cv2.line(self.frame,(size[1]/2,size[0]/2),((size[1]/2)+c[0],(size[0]/2)+c[1]),(255,0,0),2)
  #           coord_hist = (act[1],act[3])
             
             vis = self.frame.copy()

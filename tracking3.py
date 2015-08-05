@@ -144,7 +144,7 @@ def fly():
                     (success,frame,counter,centerX,centerY,radius,inbox_width_and_height) = detectCircle(counter,frame,centerX,centerY,radius)
                     if (success==True):
                         stage = 2
-                        initialEdgeLength = width
+                        initialEdgeLength = inbox_width_and_height
                         print "Initialize Camshift"
                         camShiftHandler = camShift.CamShift(centerX,centerY,inbox_width_and_height,inbox_width_and_height,frame)               
                         print "go to stage 2"

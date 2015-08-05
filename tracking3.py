@@ -2,7 +2,13 @@ import libardrone.libardrone as libardrone
 import cv2
 import numpy 
 import camShift  
- 
+
+ALLOWED_RADIUS_CHANGE = 30
+ALLOWED_CENTER_SHIFT = 40
+MIN_NUM_CONSECUTIVE_MATCHES = 7
+MIN_RADIUS_OF_CIRCLES = 50
+MIN_DISTANCE_BETWEEN_CIRCLES = 800
+
 def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
     centerX_prev = centerX
     centerY_prev= centerY
@@ -13,9 +19,9 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
     if frame != None:
         frametmp = cv2.medianBlur(frame,5)
         #find circles
-                        #param1: higher treshold of canny edge detector
-        #param2: accumulator treshold for circle center. The smaller it is, the more small circles are detected
-        circles = cv2.HoughCircles(frametmp,3 ,1,800, param1=30,param2=40,minRadius=100,maxRadius=1000)                               
+            #param1: higher treshold of canny edge detector
+            #param2: accumulator treshold for circle center. The smaller it is, the more small circles are detected
+        circles = cv2.HoughCircles(frametmp, 3, 1, MIN_DISTANCE_BETWEEN_CIRCLES, param1=30, param2=40, minRadius = MIN_RADIUS_OF_CIRCLES, maxRadius=1000)                               
         
         radius = 0
         success = False
@@ -26,37 +32,34 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
                 cv2.circle(frameRGB,(i[0],i[1]),i[2],(0,255,0),2)
                 #draw the center of the circle
                 cv2.circle(frameRGB,(i[0],i[1]),2,(0,0,255),3)
-        #get inner bounding box
 
+        #get inner bounding box
             if len(circles) == 1:
                 circle=circles[0][0]
                 radius = circle[2]
                 centerX = circle[0]
                 centerY = circle[1]
                 inbox_width_and_height = 2* numpy.sqrt((radius**2)/2)
-                
-        #cv2.imshow('Drone', frameRGB) # show the frame"
             
-        #check whether the circle didnt change since the last frame
-        
+        #check whether the circle change is within a threshold
         if radius != 0:
             diffRadius = numpy.abs(radius-radius_prev)
             diffX=numpy.abs(centerX-centerX_prev)
             diffY= numpy.abs(centerY-centerY_prev)
-            centerX_prev=centerX
-            centerY_prev=centerY
-            radius_prev=radius
-            print "diffRadius: " + str(diffRadius)+ ", diffX: " + str(diffX)+ ", diffY: " + str(diffY) 
-            if  diffRadius< 30 and  diffX< 40 and  diffY< 40:
-                sameCircleCounter+=1
+
+            #print "diffRadius: " + str(diffRadius)+ ", diffX: " + str(diffX)+ ", diffY: " + str(diffY)
+
+            if  diffRadius<ALLOWED_RADIUS_CHANGE and diffX<ALLOWED_CENTER_SHIFT and diffY<ALLOWED_CENTER_SHIFT:
+                sameCircleCounter += 1
+                print "sameCircleCounter: " + str(sameCircleCounter)
+
             else:
                 sameCircleCounter = 0
-            print "counter: " + str (sameCircleCounter)
-            if sameCircleCounter > 7: 
-                print "Call Meanshift now!"
-                #left upper corner:
+
+            if sameCircleCounter > MIN_NUM_CONSECUTIVE_MATCHES:
+                print "Found circle!"
                 success = True
-                #return (corner_x,corner_y,width,height)
+
         return (success,frameRGB,sameCircleCounter,centerX,centerY,radius,inbox_width_and_height)
 
 def fly():
@@ -160,11 +163,11 @@ def fly():
                     currentEdgeLength = minWidth
                     edgeLengthRatio = 1 - currentEdgeLength/initialEdgeLength #if object is farther away than at the starting time, then the ratio is > 0
                     #rotation
-                    drone.speed = 0.6
-                    #if middleX < 240:
-                    #    drone.turn_left()
-                    #elif middleX > 400:
-                    #    drone.turn_right()
+                    drone.speed = 0.2
+                    if middleX < 240:
+                        drone.turn_left()
+                    elif middleX > 400:
+                        drone.turn_right()
                     #approach or distance from target object
                     if (edgeLengthRatio > 0.6):
                         drone.spped = 0.2

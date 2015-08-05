@@ -93,6 +93,10 @@ def fly():
                 drone.takeoff()
                 drone.hover()
                 flying = True
+            elif key == ord('x'):
+                stage = 1
+            elif key == ord('c'):
+                stage = 0
         else:
             if key == 1048608 or key==ord(' '):
                 drone.hover()
@@ -130,8 +134,10 @@ def fly():
                 drone.speed = 0.5
             elif key == 1048628 or key==ord('4'):
                 drone.speed = 0.9
-            elif key == ord('x') and stage == 0
+            elif key == ord('x'):
                 stage = 1
+            elif key == ord('c'):
+                stage = 0
             else:
                 if return_to_hover:
                     return_to_hover = False

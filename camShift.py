@@ -22,6 +22,7 @@ class CamShift(object):
 
 		self.middleX = 0
 		self.middleY = 0
+		self.pts = []
 
 	def performCamShift(self, camImage):
 		self.frame = camImage
@@ -31,7 +32,13 @@ class CamShift(object):
 			self.dst = cv2.calcBackProject([self.hsv],[0],self.roi_hist,[0,180],1)
 			
 			# Thresholden / dichte bestimmen
-			#cv2.imshow('calcBack', self.dst)
+			if self.pts != []:
+				self.mask = np.zeros(self.dst.shape, np.uint8)
+				cv2.fillPoly(self.mask, [self.pts], (255, 255, 255))
+				self.mask = self.mask/255
+				self.masked_dst = cv2.bitwise_and(self.dst.copy(), self.mask)
+				self.sum = self.masked_dst.sum()
+				print self.sum
 
 			# apply meanshift to get the new location
 			self.ret, self.track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)

@@ -15,7 +15,6 @@ class Pipeline(threading.Thread):
     def run(self):
         af = autonomous_flight.AF(0, self.cv_win, self.drone)
         af.run()
-        interface.steer_autonomous("land")
         # to steer: interface.steer_autonomous("up")
         
         

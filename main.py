@@ -7,7 +7,7 @@ import keyboard_control
 import video_pipeline
 
 
-class Tower:  # controlls the drone movements
+class Tower:  # controls the drone movements
     def __init__(self, drone):
         self.drone = drone
         self.manual_steering = False

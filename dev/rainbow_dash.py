@@ -127,10 +127,22 @@ def main():
 #                    drone.move(0.0, 0.0, 0.0, 0.1)     
 #                else:
 #                    drone.move(0.0, 0.0, 0.0, -0.1) 
-                if errdif > 0:
-                    drone.move(0.0, -0.1, 0.0, 0.0)     
-                else:
-                    drone.move(0.0, 0.1, 0.0, 0.0) 
+                if errdif > 0.1 and errx > 0.1:
+                    drone.move(0.0, -0.1, 0.0, 0.1)     
+                elif errdif < -0.1 and errx > 0.1:
+                    drone.move(0.0, 0.1, 0.0, 0.1) 
+                elif errdif > 0.1 and errx < -0.1:
+                    drone.move(0.0, -0.1, 0.0, -0.1) 
+                elif errdif < -0.1 and errx < -0.1:
+                    drone.move(0.0, 0.1, 0.0, -0.1) 
+                elif errdif < -0.1 and abs(errx) < 0.1:
+                    drone.move(0.0, 0.1, 0.0, 0.0)
+                elif errdif > 0.1 and abs(errx) < 0.1:
+                    drone.move(0.0, -0.1, 0.0, 0.0)
+                elif abs(errdif) < 0.1 and errx > 0.1:
+                    drone.move(0.0, 0.0, 0.0, 0.1)
+                elif abs(errdif) < 0.1 and errx < -0.1:
+                    drone.move(0.0, 0.0, 0.0, -0.1)                     
                     
                 #draw inner circle
                 cv2.circle(frame, (centroid[0][0],centroid[0][1]), 10,(255,0,0) ,1)

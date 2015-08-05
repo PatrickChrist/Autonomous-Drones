@@ -5,6 +5,7 @@ import video
 import numpy as np
 import autopilot_agent as aa
 
+
 class AF(object):
     def __init__(self, video_src, window_name,drone):
         self.drone = drone
@@ -18,6 +19,11 @@ class AF(object):
         self.drag_start = None
         self.tracking_state = 0
         self.show_backproj = False
+
+        self.running = True
+
+    def stop(self):
+        self.running = False
 
     def onmouse(self, event, x, y, flags, param):
         x, y = np.int16([x, y]) # BUG
@@ -49,10 +55,10 @@ class AF(object):
         cv2.imshow('hist', img)
 
     def run(self):
-        while True:
+        while self.running:
             # This should be an numpy image array
             pixelarray = self.drone.get_image() # get an frame form the Drone
-            if pixelarray != None: # check whether the frame is not empty
+            if pixelarray is not None: # check whether the frame is not empty
                 self.frame = pixelarray[:, :, ::-1].copy() #convert to a frame
 #            ret, self.frame = self.cam.read()
                 
@@ -109,7 +115,7 @@ class AF(object):
             if ch == ord('b'):
                 self.show_backproj = not self.show_backproj
         cv2.destroyAllWindows()
-        print "im dead"
+        print "video loop stopped."
 
 
 #if __name__ == '__main__':

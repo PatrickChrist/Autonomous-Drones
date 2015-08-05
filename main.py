@@ -1,3 +1,5 @@
+import time
+
 __author__ = 'Benedikt'
 
 from libardrone import libardrone
@@ -79,11 +81,11 @@ def main_loop():
 def init():
     drone.reset()
 
-
+print "setting up drone..."
 drone = libardrone.ARDrone(True, False)
 global interface
 interface = Tower(drone)
-
+print "starting up!"
 
 if __name__ == '__main__':
     keyboard = keyboard_control.KeyboardControl(drone, interface)
@@ -100,4 +102,6 @@ if __name__ == '__main__':
         drone.land()
     finally:
         drone.halt()
+        pipeline.stop()
+        time.sleep(1)
         cv2.destroyAllWindows()

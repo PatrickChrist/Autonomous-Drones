@@ -11,10 +11,13 @@ class Pipeline(threading.Thread):
         self.drone = drone
         self.interface = interface
         self.cv_win = "Fury"
+        self.af = autonomous_flight.AF(0, self.cv_win, self.drone)
+
+    def stop(self):
+        self.af.stop()
 
     def run(self):
-        af = autonomous_flight.AF(0, self.cv_win, self.drone)
-        af.run()
+        self.af.run()
         # to steer: interface.steer_autonomous("up")
         
         

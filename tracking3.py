@@ -7,8 +7,8 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
     centerX_prev = centerX
     centerY_prev= centerY
     radius_prev = radius
-    width = 0
-    height = 0
+    inbox_width_and_height = 0
+
     frame = cv2.cvtColor(frameRGB, cv2.COLOR_BGR2GRAY)
     if frame != None:
         frametmp = cv2.medianBlur(frame,5)
@@ -33,9 +33,7 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
                 radius = circle[2]
                 centerX = circle[0]
                 centerY = circle[1]
-                width = 2* numpy.sqrt(radius/2)
-                height = width
- 
+                inbox_width_and_height = 2* numpy.sqrt((radius**2)/2)
                 
         #cv2.imshow('Drone', frameRGB) # show the frame"
             
@@ -57,13 +55,9 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
             if sameCircleCounter > 7: 
                 print "Call Meanshift now!"
                 #left upper corner:
-                centerX=centerX
-                centerY=centerY
-                width = width
-                height = height
                 success = True
                 #return (corner_x,corner_y,width,height)
-        return (success,frameRGB,sameCircleCounter,centerX,centerY,radius,width,height)
+        return (success,frameRGB,sameCircleCounter,centerX,centerY,radius,inbox_width_and_height)
 
 def fly():
     drone.reset()
@@ -73,7 +67,7 @@ def fly():
     stage = 0 #stages: 0=find circle, 1=init camshift, 2=use camshift
     
     #variables for the circle detector
-    counter,centerX,centerY, radius,width,height = 0,0,0,0,0,0    
+    counter,centerX,centerY, radius, inbox_width_and_height= 0,0,0,0,0   
     while running:
         keyPressed = True
         key = cv2.waitKey(33)
@@ -145,13 +139,13 @@ def fly():
         if (frame != None):
             if (keyPressed == False):
                 if (stage==0):
-                    (success,frame,counter,centerX,centerY,radius,width,height) = detectCircle(counter,frame,centerX,centerY,radius)
+                    (success,frame,counter,centerX,centerY,radius,inbox_width_and_height) = detectCircle(counter,frame,centerX,centerY,radius)
                     print "counter: " + str(counter)
                     if (success==True):
                         stage = 1
                 elif (stage==1):
                     print "stage 2"
-                    camShiftHandler = camShift.CamShift(centerX,centerY,width,height,frame)               
+                    camShiftHandler = camShift.CamShift(centerX,centerY,inbox_width_and_height,inbox_width_and_height,frame)               
                     stage = 2
                     print "go to stage 3"
                 elif (stage==2):                    

@@ -87,10 +87,12 @@ interface = Tower(drone)
 if __name__ == '__main__':
     keyboard = keyboard_control.KeyboardControl(drone)
     pipeline = video_pipeline.Pipeline(drone)
+    pipeline.daemon = True
     cv2.imshow('Drone', numpy.zeros((10, 10)))
 
     try:
         init()
+        pipeline.start()
         main_loop()
     except Exception, e:
         print "Going down.", e

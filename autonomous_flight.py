@@ -56,24 +56,23 @@ class AF(object):
         cv2.imshow('hist', img)
 
     def steer_to(self, right, down, size):
-        normalsize = (60.0, 60.0)  # floats sind wichtig
-        percent_of_size = (size[0] / normalsize[0] + size[1] / normalsize[1]) / 2.0
+        facesize = (size[0] + size[1]) / 2.0
 
         if right < -70:
             self.interface.steer_autonomous("turnleft", 0.2)
         elif right > 70:
             self.interface.steer_autonomous("turnright", 0.2)
-        elif percent_of_size > 1.05: # too big, move away
+        elif facesize > 75:  # too big, move away
             self.interface.steer_autonomous("backward", 0.05)
-        elif percent_of_size < 0.95:
+        elif facesize < 55:
             self.interface.steer_autonomous("forward", 0.05)
+        elif down < -30:
+            self.interface.steer_autonomous("up", 0.2)
+        elif down > 30:
+            self.interface.steer_autonomous("down", 0.2)
         else:
             self.interface.steer_autonomous("hover")
 
-        # if down < 0:
-        #     self.interface.steer_autonomous("forward", 0.1)
-        # else:
-        #     self.interface.steer_autonomous("backward", 0.1)
 
     def run(self):
         while self.running:

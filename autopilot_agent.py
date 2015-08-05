@@ -62,7 +62,7 @@ def action(img_bytes, img_width, img_height, is_belly, ctrl_state, vbat_flying_p
                  
     # Grab centroid of face
     ctr = face_tracker.track(image)
-    ctr = ball_tracker.track(image)
+    # ctr = ball_tracker.track(image)
  
     # Use centroid if it exists
     if ctr:

@@ -109,6 +109,7 @@ class AF(object):
             if ch == ord('b'):
                 self.show_backproj = not self.show_backproj
         cv2.destroyAllWindows()
+        print "im dead"
 
 
 #if __name__ == '__main__':

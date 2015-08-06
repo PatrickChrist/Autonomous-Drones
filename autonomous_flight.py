@@ -302,27 +302,44 @@ def znorm(z):
 
 class PDcontroller:
     def __init__(self):
-        self.lastxs = collections.deque(maxlen=5)
+        history = 5
+        self.lastxs = collections.deque(maxlen=history)
+        self.lastys = collections.deque(maxlen=history)
+        self.lastzs = collections.deque(maxlen=history)
         self.kp = 0.05
         self.kd = 0.05
 
     def adjust(self, x, y, z):
+        self.lastxs.append(x)
+        self.lastys.append(y)
+        self.lastzs.append(z)
+
+        dx, dy, dz = self.foldingavg([x, y, z])
+        vx, vy, vz = self.calc([(x, dx), (y, dy), (z, dz)])
+
         if x < X_LOWER:
-            return "turnleft", bound(abs(x) / 320.0 * 0.5)
+            return "turnleft", bound(vx, 0.5)
         elif x > X_UPPER:
-            return "turnright", bound(abs(x) / 320.0 * 0.5)
+            return "turnright", bound(vx, 0.5)
         elif z < Z_LOWER:
-            return "up", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
+            return "up", bound(vz, 0.7)
         elif z > Z_UPPER:
-            return "down", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
+            return "down", bound(vz, 0.7)
         elif y > Y_UPPER:  # too big, move away
-            return "backward", bound(abs(y - Y_CENTER) / 30.0 * 0.15, 0.15)
+            return "backward", bound(vy, 0.2)
         elif y < Y_LOWER:
-            return "forward", bound(abs(y - Y_CENTER) / 20.0 * 0.15, 0.15)
+            return "forward", bound(vy, 0.2)
         else:
             return "hover", 0.3
 
+    def calc(self, values):
+        return [x * self.kp + dx * self.kd for (x, dx) in values]
 
+    def foldingavg(self, lists):
+        return [self.avg([a - b for a, b in zip(vlist[:-1], vlist[1:])]) for vlist in lists]
+
+    def avg(self, l):
+        return float(sum(l)) / float(len(l))
 
 class PIDcontroller:
     def __init__(self):

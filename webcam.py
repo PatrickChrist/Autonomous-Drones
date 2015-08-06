@@ -16,18 +16,47 @@ cap = cv2.VideoCapture(0)
 def middle(start, end, a, b):
     x0, y0 = start
     xn, yn = end
+    print start
+    print end
+    print a
+    print b
     in_range = None
     num_in_range = 0
     while x0 < xn and y0 < yn:
-        x0 += a
-        y0 += b
+        x0 -= b
+        y0 += a
         if x0 >= 0 and y0 >= 0 and x0 <= 320 and y0 <= 180:
             if in_range == None:
                 in_range = (x0, y0)
             num_in_range += 1
-    xl, yl = in_range
-    return (xl + (-b) * (num_in_range / 2), yl + a * (num_in_range / 2))
+    if in_range != None:
+        xl, yl = in_range
+        return (xl + (-b) * (num_in_range / 2), yl + a * (num_in_range / 2))
+    return (0, 0)
             
+def middle(start, end, a, b):
+    x0, y0 = start
+    xn, yn = end
+    print start
+    print end
+    print a
+    print b
+    in_range = None
+    out_range = None
+    num_in_range = 0
+    while x0 < xn and y0 < yn:
+        x0 -= b
+        y0 += a
+        if x0 >= 0 and y0 >= 0 and x0 <= 320 and y0 <= 180:
+            if in_range == None:
+                in_range = (x0, y0)
+            num_in_range += 1
+            out_range = (x0, y0)
+    if in_range != None:
+        xl, yl = in_range
+        return (xl + (-b) * (num_in_range / 2), yl + a * (num_in_range / 2))
+    return (0, 0)
+
 
 while(True):
     # Capture frame-by-frame
@@ -64,6 +93,10 @@ while(True):
             
             
             x = a * rho
+            y = b * rho
+            
+            x, y = middle((x - 1000 * b, y + 1000 * a), (x + 1000 * b, y - 1000 * a), a, b)
+            print x
             
             if theta < math.pi / 2:
                 b = -b
@@ -71,7 +104,7 @@ while(True):
             w, h, d = frame.shape
             
             cv2.line(frame, (int(w/2), int(h/2)), (int(w/2+b*1000), int(h/2-a*1000)), (255, 0, 255))
-            cv2.line(edges, (int(a*rho), int(b*rho)), (int(x), 1000), (255, 255, 255))
+            cv2.line(edges, (int(x), int(0)), (int(x), 1000), (255, 255, 255))
             lr = str(b / 3)
             rb = str(-a / 3)
             font = cv2.FONT_HERSHEY_SIMPLEX

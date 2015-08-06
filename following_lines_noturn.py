@@ -99,7 +99,7 @@ while running:
                         b = np.sin(theta)
                         x = a * rho
                         
-                        x = middle((x - 400 * b, y + 400 * a), (x + 400 * b, y - 400 * a), a, b)
+                        x = a * rho
                         # fake theta
                         theta_delta = 0
                         if x < optimum_x - 20:
@@ -108,6 +108,9 @@ while running:
                         elif x > optimum_x + 20:
                             theta += angle_change
                             theta_delta = angle_change
+                        else:
+                            drone.hover()
+                            time.sleep(1)
                         a = np.cos(theta)
                         b = np.sin(theta)
                         

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 
 import cv2 #import opencv
 import video
@@ -13,8 +14,18 @@ def tup_abs(tuple):
 def tuple_absolute_difference(a, b):
     return tuple([abs(x - y) for x, y in zip(a, b)])
 
+X_LOWER = -70
+X_UPPER = 70
+Y_LOWER = 40
+Y_UPPER = 45
+Y_CENTER = (Y_UPPER + Y_LOWER) / 2
+Z_LOWER = -70
+Z_UPPER = 10
+Z_CENTER = (Z_UPPER + Z_LOWER) / 2
+
 class AF(object):
     def __init__(self, video_src, window_name,drone, interface):
+        self.controller = Pcontroller()
         self.consequtive_misses = 0
         self.drone = drone
         self.window_name = window_name
@@ -67,21 +78,23 @@ class AF(object):
 
     def steer_to(self, right, down, size):
         facesize = (size[0] + size[1]) / 2.0
-
-        if right < -70:
-            self.interface.steer_autonomous("turnleft", 0.2)
-        elif right > 70:
-            self.interface.steer_autonomous("turnright", 0.2)
-        elif facesize > 70:  # too big, move away
-            self.interface.steer_autonomous("backward", 0.05)
-        elif facesize < 60:
-            self.interface.steer_autonomous("forward", 0.05)
-        elif down < -30:
-            self.interface.steer_autonomous("down", 0.2)
-        elif down > 30:
-            self.interface.steer_autonomous("up", 0.2)
-        else:
-            self.interface.steer_autonomous("hover")
+        command, speed = self.controller.adjust(right, size, down)
+        self.interface.steer_autonomous(command, speed)
+        # print down, facesize
+        # if right < X_LOWER:
+        #     self.interface.steer_autonomous("turnleft", 0.15)
+        # elif right > X_UPPER:
+        #     self.interface.steer_autonomous("turnright", 0.15)
+        # elif down < Z_LOWER:
+        #     self.interface.steer_autonomous("up", 0.4)
+        # elif down > Z_UPPER:
+        #     self.interface.steer_autonomous("down", 0.4)
+        # elif facesize > Y_UPPER:  # too big, move away
+        #     self.interface.steer_autonomous("backward", 0.05)
+        # elif facesize < Y_LOWER:
+        #     self.interface.steer_autonomous("forward", 0.05)
+        # else:
+        #     self.interface.steer_autonomous("hover")
 
     def run(self):
         # self.run_old()
@@ -192,20 +205,20 @@ class AF(object):
                     # look for the best face
                     for item in faces:
                         (x, y, w, h) = item
-                        print "face at ", x, " ", y
+                        # print "face at ", x, " ", y
                         facediff = tuple_absolute_difference(item, self.lastface)
                         avg_diff = sum(facediff) / len(facediff)
                         if bestface is None or avg_diff < bestface[1]:
                             bestface = (item, avg_diff)
-                            print "reassign: avgdiff=", avg_diff
+                            # print "reassign: avgdiff=", avg_diff
 
-                    if bestface is None or bestface[1] > 20.0:
+                    if bestface is None or bestface[1] > 30.0:
                         # ignore improbable face movement
                         self.consequtive_misses += 1
                     else:
                         face = bestface[0]
 
-                if self.consequtive_misses > 20:
+                if self.consequtive_misses > 10:
                     self.consequtive_misses = 0
                     print "20 misses, resetting face detector"
                     self.lastface = None
@@ -223,8 +236,8 @@ class AF(object):
                     (fx, fy, fw, fh) = face
                     framecenter = (size[0] / 2, size[1] / 2)
                     center = (fx + fw / 2, fy + fh / 2)
-                    dx = framecenter[0] - center[0]
-                    dy = framecenter[1] - center[1]
+                    dx = center[0] - framecenter[0]
+                    dy = center[1] - framecenter[1]
                     cv2.line(self.frame, framecenter, center, (0, 255, 0), 4)
                     self.steer_to(dx, dy, (fw, fh))
                     self.lastface = face
@@ -234,6 +247,90 @@ class AF(object):
 
         cv2.destroyAllWindows()
         print "video loop stopped."
+
+def bound(val, maxval=1.0):
+    return max(0, min(val, maxval))
+
+class ccontroller:
+    def __init__(self):
+        pass
+
+    def adjust(self, x, y, z):
+        if x < X_LOWER:
+            return "turnleft", 0.15
+        elif x > X_UPPER:
+            return "turnright", 0.15
+        elif z < Z_LOWER:
+            return "up", 0.4
+        elif z > Z_UPPER:
+            return "down", 0.4
+        elif y > Y_UPPER:  # too big, move away
+            return "backward", 0.05
+        elif y < Y_LOWER:
+            return "forward", 0.05
+        else:
+            return "hover", 0.3
+
+class Pcontroller:
+    def __init__(self):
+        pass
+
+    def adjust(self, x, y, z):
+        if x < X_LOWER:
+            return "turnleft", bound(abs(x) / 320.0 * 0.5)
+        elif x > X_UPPER:
+            return "turnright", bound(abs(x) / 320.0 * 0.5)
+        elif z < Z_LOWER:
+            return "up", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
+        elif z > Z_UPPER:
+            return "down", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
+        elif y > Y_UPPER:  # too big, move away
+            return "backward", bound(abs(y - Y_CENTER) / 30.0 * 0.15, 0.15)
+        elif y < Y_LOWER:
+            return "forward", bound(abs(y - Y_CENTER) / 20.0 * 0.15, 0.15)
+        else:
+            return "hover", 0.3
+
+def xnorm(x):
+    return abs(x) / 320.0
+
+def ynorm(y):
+    return abs(y - Y_CENTER) / 30.0
+
+def znorm(z):
+    return abs(z - Z_CENTER) / 160.0
+
+class PDcontroller:
+    def __init__(self):
+        self.lastxs = collections.deque(maxlen=5)
+        self.kp = 0.05
+        self.kd = 0.05
+
+    def adjust(self, x, y, z):
+        if x < X_LOWER:
+            return "turnleft", bound(abs(x) / 320.0 * 0.5)
+        elif x > X_UPPER:
+            return "turnright", bound(abs(x) / 320.0 * 0.5)
+        elif z < Z_LOWER:
+            return "up", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
+        elif z > Z_UPPER:
+            return "down", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
+        elif y > Y_UPPER:  # too big, move away
+            return "backward", bound(abs(y - Y_CENTER) / 30.0 * 0.15, 0.15)
+        elif y < Y_LOWER:
+            return "forward", bound(abs(y - Y_CENTER) / 20.0 * 0.15, 0.15)
+        else:
+            return "hover", 0.3
+
+
+
+class PIDcontroller:
+    def __init__(self):
+        pass
+
+    def adjust(self, x, y, z):
+        return "hover", 0.3
+
 
 
 

@@ -7,77 +7,12 @@ Created on Wed Aug 05 09:21:03 2015
 
 import cv2
 import numpy as np
-import libardrone.libardrone as libardrone
 import threading
 import time
+from manual_control_helpers import *
 
-action_duration = 0.5
-
-def show_img(img):
-    cv2.imshow('image', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-def right():
-    global drone
-    global action_duration
-    drone.move_right()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def left():
-    global drone
-    global action_duration
-    drone.move_left()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def tRight():
-    global drone
-    global action_duration
-    drone.turn_right()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def tLeft():
-    global drone
-    global action_duration
-    drone.turn_left()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def forward():
-    global drone
-    global action_duration
-    drone.move_forward()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def upward():
-    global drone
-    global action_duration
-    drone.move_up()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def down():
-    global drone
-    global action_duration
-    drone.move_down()
-    time.sleep(action_duration)
-    drone.hover()
-    
-def back():
-    global drone
-    global action_duration
-    drone.move_backward()
-    time.sleep(action_duration)
-    drone.hover()
-    
-    
-def img():
-    global drone
-    show_img(drone.get_image())
+drone = make_drone()
+print drone
 
 def decision(img):
     
@@ -179,10 +114,11 @@ def webcam_test():
         #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
             # Display the resulting frame
-        #if frame != None:
         cv2.imshow('frame',frame)
         
         k = cv2.waitKey(1)
+        
+        print_action(decision(frame))
         
         if k == ord('q'):
             break
@@ -196,17 +132,15 @@ def webcam_test():
         cv2.destroyAllWindows()
 
 def drone_test():
-    global drone
-
-    drone = libardrone.ARDrone(1, 1)
-    drone.set_camera_view(0)
+    
+    
     if drone.navdata[0]['battery'] < 20:
         print 'battery empty'
     else:
         print 'battery:', drone.navdata[0]['battery']
     
     #if online:
-    drone.takeoff()
+    #drone.takeoff()
     
     
 
@@ -269,11 +203,6 @@ def hard_path(a,b):
     
     
 def circle_pit(a, b):
-    global drone
-    while a > 0:
-        forward()
-        time.sleep(b)
-        tLeft()
-        time.sleep(b)
-        a = a - 1
+    # neu und turbo kurz
+    tleft(12)
     

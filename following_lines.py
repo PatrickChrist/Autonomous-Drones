@@ -14,17 +14,17 @@ running = True
 flying = False
 line_in_sight = False
 # operational
-speed = 0.1 #forward movement
-gain_x = 0.1 #horizontal gain
-gain_z = 0.2 #vertical_gain
-gain_r = 0.1 #rotation gain
+speed = 0 #forward movement
+gain_x = 0.3 #horizontal gain
+gain_z = 0.3 #vertical_gain
+gain_r = 0.3 #rotation gain
 # optimum
 optimum_x = 160 #center in the middle of 320px frame
 optimum_z = 800 #keep height at 80cm
 optimum_r = 0 #no rotation por favor
 #image buffer
 buffer_counter = 0
-buffer_distance = 3
+buffer_distance = 10
 
 # init da drone
 drone=libardrone.ARDrone(1,1) #initalize the Drone Object
@@ -72,18 +72,18 @@ while running:
                     z = drone.navdata[0]['altitude']
 # corrections
                     #check speed maybe?                    
-                    correct_x = (x - optimum_x) / optimum_x * gain_x
+                    correct_x = -(x - optimum_x) / optimum_x * gain_x
                     correct_z = (optimum_z - z) / optimum_z * gain_z
-                    correct_r = (slope - optimum_r) * gain_r
+                    correct_r = -(slope - optimum_r) * gain_r
 # print to console
                     
                     print_x = 'right   ' if correct_x > 0 else 'left    '
                     print_z = 'up    ' if correct_z > 0 else 'down  '
                     print_r = 'rotate right' if correct_r > 0 else 'rotate left '
-                    print print_x + print_z + print_r
+                    print print_x, correct_x, print_z, correct_z, print_r, correct_r
                     #print 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
 #call the drone
-                    drone.at(drone.at_pcmd, correct_x, speed, 0, correct_r)
+                    drone.at(drone.at_pcmd, correct_x, -speed, correct_z, correct_r)
 #keyboard controls
             k = cv2.waitKey(33)
             if k == 27: #stop with esc
@@ -95,7 +95,7 @@ while running:
                     drone.takeoff()
                 flying = not flying
                 # wasd for front/back/left/right
-            elif k == ord('a'):
+            elif k == ord('a'): 
                 drone.move_left()
             elif k == ord('d'):
                 drone.move_right()
@@ -120,7 +120,9 @@ while running:
             #speed adjustment on i & o
             elif k == ord('i'):
                 speed += 0.1
+                print 'speed:', -speed
             elif k == ord('o'):
                 speed -= 0.1
+                print 'speed:', -speed
     except:
-        print ""
+        print ""  

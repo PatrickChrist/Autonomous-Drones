@@ -60,7 +60,7 @@ while(True):
             
     
     
-    cv2.imshow('frame',frame)
+    cv2.imshow('frame',edges)
     
     k = cv2.waitKey(1)
     

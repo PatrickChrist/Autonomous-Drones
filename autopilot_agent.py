@@ -64,6 +64,8 @@ def action(img_bytes, img_width, img_height, is_belly, ctrl_state, vbat_flying_p
     ctr, faces = face_tracker.track(image)
 #    ctr = ball_tracker.track(image)
 
+    print "got %s faces" % str(len(faces))
+
     dx = 0
     dy = 0
 

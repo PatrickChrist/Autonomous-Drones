@@ -4,10 +4,18 @@ import cv2 #import opencv
 import video
 import numpy as np
 import autopilot_agent as aa
+import face_tracker
+import time
 
+def tup_abs(tuple):
+    return tuple([abs(i) for i in tuple])
+
+def tuple_absolute_difference(a, b):
+    return tuple([abs(x - y) for x, y in zip(a, b)])
 
 class AF(object):
     def __init__(self, video_src, window_name,drone, interface):
+        self.consequtive_misses = 0
         self.drone = drone
         self.window_name = window_name
         self.cam = video.create_capture(video_src)
@@ -19,6 +27,8 @@ class AF(object):
         self.drag_start = None
         self.tracking_state = 0
         self.show_backproj = False
+
+        self.lastface = None
 
         self.interface = interface
         self.running = True
@@ -62,19 +72,22 @@ class AF(object):
             self.interface.steer_autonomous("turnleft", 0.2)
         elif right > 70:
             self.interface.steer_autonomous("turnright", 0.2)
-        elif facesize > 75:  # too big, move away
+        elif facesize > 70:  # too big, move away
             self.interface.steer_autonomous("backward", 0.05)
-        elif facesize < 55:
+        elif facesize < 60:
             self.interface.steer_autonomous("forward", 0.05)
         elif down < -30:
-            self.interface.steer_autonomous("up", 0.2)
-        elif down > 30:
             self.interface.steer_autonomous("down", 0.2)
+        elif down > 30:
+            self.interface.steer_autonomous("up", 0.2)
         else:
             self.interface.steer_autonomous("hover")
 
-
     def run(self):
+        # self.run_old()
+        self.run_new()
+
+    def run_old(self):
         while self.running:
             # This should be an numpy image array
             pixelarray = self.drone.get_image() # get an frame form the Drone
@@ -140,6 +153,88 @@ class AF(object):
                 self.show_backproj = not self.show_backproj
         cv2.destroyAllWindows()
         print "video loop stopped."
+
+    def run_new(self):
+        import cv2.cv as cv
+        while self.running:
+            pixelarray = self.drone.get_image() # get an frame form the Drone
+            if pixelarray is not None: # check whether the frame is not empty
+                self.frame = pixelarray[:, :, ::-1].copy() #convert to a frame
+
+            weirdsize = self.frame.shape
+            size = (weirdsize[1], weirdsize[0])
+
+            image = cv.CreateImageHeader(size[:2], cv.IPL_DEPTH_8U, 3)
+            cv.SetData(image, self.frame, size[0]*3)
+
+            # Grab centroid and faces
+            ctr, faces = face_tracker.track(image)
+            faces = [f for (f, n) in faces]
+
+            # print "got %s faces" % str(len(faces))
+
+            gotface = True
+            face = None
+            bestface = None
+            if self.lastface is None:  # no previous data, wait until only one face detected
+                if len(faces) == 1:
+                    self.lastface = faces[0]
+                    face = faces[0]
+                else:
+                    # print "no face yet"
+                    gotface = False
+            else:
+                # we have previous face data
+                if len(faces) == 0:
+                    self.consequtive_misses += 1
+                    gotface = False
+                else:
+                    # look for the best face
+                    for item in faces:
+                        (x, y, w, h) = item
+                        print "face at ", x, " ", y
+                        facediff = tuple_absolute_difference(item, self.lastface)
+                        avg_diff = sum(facediff) / len(facediff)
+                        if bestface is None or avg_diff < bestface[1]:
+                            bestface = (item, avg_diff)
+                            print "reassign: avgdiff=", avg_diff
+
+                    if bestface is None or bestface[1] > 20.0:
+                        # ignore improbable face movement
+                        self.consequtive_misses += 1
+                    else:
+                        face = bestface[0]
+
+                if self.consequtive_misses > 20:
+                    self.consequtive_misses = 0
+                    print "20 misses, resetting face detector"
+                    self.lastface = None
+            if gotface:
+                # draw all faces
+                for item in faces:
+                    (x, y, w, h) = item
+                    if item == face:
+                        cv.Rectangle(image, (x, y), (x+w, y+h), cv.RGB(255, 0, 0), 3, 8, 0)
+                    else:
+                        cv.Rectangle(image, (x, y), (x+w, y+h), cv.RGB(0, 0, 255), 3, 8, 0)
+
+                if face is not None:
+                    # steer and draw steering line
+                    (fx, fy, fw, fh) = face
+                    framecenter = (size[0] / 2, size[1] / 2)
+                    center = (fx + fw / 2, fy + fh / 2)
+                    dx = framecenter[0] - center[0]
+                    dy = framecenter[1] - center[1]
+                    cv2.line(self.frame, framecenter, center, (0, 255, 0), 4)
+                    self.steer_to(dx, dy, (fw, fh))
+                    self.lastface = face
+
+            cv2.imshow(self.window_name, self.frame)
+            time.sleep(0.05)
+
+        cv2.destroyAllWindows()
+        print "video loop stopped."
+
 
 
 #if __name__ == '__main__':

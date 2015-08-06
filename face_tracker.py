@@ -12,10 +12,10 @@ import cv2.cv as cv
 # scale_factor=1.2, min_neighbors=2, flags=CV_HAAR_DO_CANNY_PRUNING,
 # min_size=<minimum possible face size
  
-min_size = (20,20)
-image_scale = 2
+min_size = (10, 10)
+image_scale = 1.2
 haar_scale = 1.2
-min_neighbors = 2
+min_neighbors = 3
 haar_flags = 0
  
 # For OpenCV image display
@@ -41,6 +41,7 @@ def track(img, threshold=100):
  
     center = (-1,-1)
     faces = []
+    original_size_faces = []
     #import ipdb; ipdb.set_trace()
     if(cascade):
         t = cv.GetTickCount()
@@ -53,7 +54,7 @@ def track(img, threshold=100):
                 # bounding box of each face and convert it to two CvPoints
                 pt1 = (int(x * image_scale), int(y * image_scale))
                 pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
-                cv.Rectangle(img, pt1, pt2, cv.RGB(255, 0, 0), 3, 8, 0)
+                # cv.Rectangle(img, pt1, pt2, cv.RGB(255, 0, 0), 3, 8, 0)
                 #cv.Rectangle(img, (x,y), (x+w,y+h), 255)
                 # get the xy corner co-ords, calc the center location
                 x1 = pt1[0]
@@ -63,13 +64,19 @@ def track(img, threshold=100):
                 centerx = x1+((x2-x1)/2)
                 centery = y1+((y2-y1)/2)
                 center = (centerx, centery)
- 
+
+                scaled = ((x1, y1, x2 - x1, y2 - y1), n)
+                original_size_faces.append(scaled)
+                # print scaled
+
+
+
 #    cv.NamedWindow(WINDOW_NAME, 1)
 #    cv.ShowImage(WINDOW_NAME, img)
      
 #    if cv.WaitKey(5) == 27:
 #        center = None
-    return (center, faces)
+    return (center, original_size_faces)
  
 if __name__ == '__main__':
  

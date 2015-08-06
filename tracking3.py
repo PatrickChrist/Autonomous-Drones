@@ -68,6 +68,7 @@ def fly():
     return_to_hover = False
     flying = False
     stage = 0 #stages: 0=hover, 1=find circle, 1=use camshift
+    #cap = cv2.VideoCapture(0)    
     
     #variables for the circle detector
     counter,centerX,centerY, radius, inbox_width_and_height, initialEdgeLength = 0,0,0,0,0,0  
@@ -163,6 +164,7 @@ def fly():
                         print "Initialize Camshift"
                         camShiftHandler = camShift.CamShift(centerX,centerY,inbox_width_and_height,inbox_width_and_height,frame)               
                         print "go to stage 2"
+                        success, frame, centerPtX, centerPtY, minWidth = camShiftHandler.performCamShift(frame)
                 elif (stage==2):                    
                     success, frame, centerPtX, centerPtY, minWidth = camShiftHandler.performCamShift(frame)
                     currentEdgeLength = minWidth
@@ -221,12 +223,12 @@ if __name__ == '__main__':
     drone = libardrone.ARDrone(True, False)
     cv2.imshow('Drone', numpy.zeros((10, 10)))
 
-    try:
-        fly()
-    except Exception, e:
-        print "Going down because of exception.", e
-    finally:
-        print "Going down on close"
-        drone.land()
-        cv2.destroyAllWindows()
+    #try:
+    fly()
+    #except Exception, e:
+    print "Going down because of exception."#, e
+    #finally:
+    print "Going down on close"
+    drone.land()
+    cv2.destroyAllWindows()
 

@@ -15,59 +15,63 @@ def show_img(img):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-# eine
+def test_config():
+	global drone
+	print drone
+
+# one function to move them all
 def drone_move(action, iterations=1):
     global drone
     global action_duration
-    while iterations >0:
-        drone.action
-        time.sleep(action_duration)
-    drone.hover()
+    drone.action
+    if iterations > 0:
+    	time.sleep(action_duration * iterations)
+    	drone.hover()
 
 def right(i=1):
-    a = drone.move_right()
+    a = move_right()
     drone_move(a, i)
     
 def left(i=1):
-    a = drone.move_left()
+    a = move_left()
     drone_move(a, i)
     
 def tright(i=1):
-    a = drone.turn_right()
+    a = turn_right()
     drone_move(a, i)
     
 def tleft():
-    a = drone.turn_left(i=1)
+    a = turn_left(i=1)
     drone_move(a, i)
     
 def up(i=1):
-    a = drone.move_up()
+    a = move_up()
     drone_move(a, i)
     
 def down(i=1):
-    a = drone.move_down()
+    a = move_down()
     drone_move(a, i)
     
 def back(i=1):
-    a = drone.move_backwards()
+    a = move_backwards()
     drone_move(a, i)
   
 def go(i=1):
-    a = drone.move_forward()
+    a = move_forward()
     drone_move(a, i)
     
-def land():
-    a = drone.land()
-    drone_move(a)
-    
 def hover():
-    a = drone.hover()
+    a = hover()
     drone_move(a)
 
 def takeoff():
-    a = drone.takeoff()
+    a = takeoff()
     drone_move(a)
-    
+
+def land():
+    global drone
+    drone.land()
+
 def speed(s):
     global drone
     drone.set_speed(s)
@@ -105,41 +109,41 @@ def fly():
     while(fly):
         k = cv2.waitKey(33)
         
-#        if k == -1:
-#            k = k # do nothing
+        if k == -1:
+            hover(0) # do nothing
             
         # wasd for front/back/left/right
         if k == ord('a'):
-            left()
+            left(0)
         elif k == ord('d'):
-            right()
+            right(0)
         elif k == ord('w'):
-            go()
+            go(0)
         elif k == ord('s'):
-            back()
+            back(0)
             
         # arrow keys for up/down/rotate
         elif k == 63232:
-            up()
+            up(0)
         elif k == 63233:
-            down()
+            down(0)
         elif k == 63234:
-            tleft()
+            tleft(0)
         elif k == 63235:
-            tright()
+            tright(0)
             
         # space bar makes the drone hover
         elif k == 32:
-            hover()
+            hover(0)
         # l to land
         elif k == ord('l'):
-            land()
+            land(0)
         # t for takeoff
         elif k == ord('k'):
-            takeoff()
+            takeoff(0)
         # n gets navdata
         elif k == ord('n'):
-            navdata()
+            navdata(0)
     
         # killall
         elif k == 27:

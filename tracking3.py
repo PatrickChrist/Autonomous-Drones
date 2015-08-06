@@ -164,28 +164,30 @@ def fly():
                         camShiftHandler = camShift.CamShift(centerX,centerY,inbox_width_and_height,inbox_width_and_height,frame)               
                         print "go to stage 2"
                 elif (stage==2):                    
-                    frame, centerPtX, centerPtY, minWidth = camShiftHandler.performCamShift(frame)
-                    print str(middleX)+" "+str(middleY)+" minWidth: "+str(minWidth)
+                    success, frame, centerPtX, centerPtY, minWidth = camShiftHandler.performCamShift(frame)
                     currentEdgeLength = minWidth
                     edgeLengthRatio = currentEdgeLength/initialEdgeLength #if object is farther away than at the starting time, then the ratio is > 0
                     #rotation
-                    if centerPtX < 240:
-                        ratio_normalized = (windowCenterX-centerPtX/diffX_max)
-                        drone.speed = MAX_SPEED * ratio_normalized
-                        drone.turn_left()
-                    elif centerPtX > 400:
-                        ratio_normalized = (centerPtX-windowCenterX/diffX_max)
-                        drone.speed = MAX_SPEED * ratio_normalized
-                        drone.turn_right()
-                    #approach or distance from target object
-                    if (edgeLengthRatio > 1):
-                        ratio_normalized = (edgeLengthRatio-1)/(max_ratio_window_with_to_edge-1)
-                        drone.spped = ratio_normalized * MAX_SPEED
-                        drone.move_forward()
-                    elif (edgeLengthRatio < 1):
-                        ratio_normalized = 1 - edgeLengthRatio
-                        drone.speed = MAX_SPEED * ratio_normalized
-                        drone.move_backward()
+                    if success:
+                        if centerPtX < 240:
+                            ratio_normalized = (windowCenterX-centerPtX/diffX_max)
+                            drone.speed = MAX_SPEED * ratio_normalized
+                            drone.turn_left()
+                        elif centerPtX > 400:
+                            ratio_normalized = (centerPtX-windowCenterX/diffX_max)
+                            drone.speed = MAX_SPEED * ratio_normalized
+                            drone.turn_right()
+                        #approach or distance from target object
+                        if (edgeLengthRatio > 1):
+                            ratio_normalized = (edgeLengthRatio-1)/(max_ratio_window_with_to_edge-1)
+                            drone.spped = ratio_normalized * MAX_SPEED
+                            drone.move_forward()
+                        elif (edgeLengthRatio < 1):
+                            ratio_normalized = 1 - edgeLengthRatio
+                            drone.speed = MAX_SPEED * ratio_normalized
+                            drone.move_backward()
+                        else:
+                            drone.hover()
                     else:
                         drone.hover()
 

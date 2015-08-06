@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-usesOpenCV3 = False
+usesOpenCV3 = True
 
 def boxPoints(ret):
 	if (usesOpenCV3 == True):
@@ -44,6 +44,8 @@ class CamShift(object):
 		self.pts = None
 		self.ret = None
 
+		self.isFirstTime = True
+
 
 	def performCamShift(self, camImage):
 
@@ -51,24 +53,41 @@ class CamShift(object):
 			self.hsv = cv2.cvtColor(camImage, cv2.COLOR_BGR2HSV)
 			self.dst = cv2.calcBackProject([self.hsv],[0],self.roi_hist,[0,180],1)
 
+			mask = np.zeros(self.dst.shape, np.uint8)
+			for i in range(0,self.dst.shape[0]-1):
+				for j in range(0,self.dst.shape[1]-1):
+					if self.hsv[i][j][2] in range(50,200):
+						mask[i][j] = 1
+
+			self.dst = np.multiply(self.dst, mask)
+
 			# apply meanshift to get the new location
 			tmp_ret, tmp_track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)
 			tmp_pts = boxPoints(tmp_ret)
 			tmp_pts = np.int0(tmp_pts)
 
 			# calc density
-			if self.initial_histogram_density == None:
+			if self.isFirstTime:
 				self.initial_histogram_density = self.get_current_histogram_density(tmp_ret, tmp_pts)
+				self.isFirstTime = False
 			
 			current_histogramm_density = self.get_current_histogram_density(tmp_ret, tmp_pts)
 			current_length_width_ratio = tmp_ret[1][0]/float(tmp_ret[1][1])
-			if self.initial_histogram_density*0.6 < current_histogramm_density and current_length_width_ratio>0.5 and current_length_width_ratio<2 :
+
+			if self.isFirstTime:
+				ratio_lastWH_and_currentWH = True
+			else:
+				ratio_lastWH_and_currentWH = (self.ret[1][0]+self.ret[1][1])/float(tmp_ret[1][0]+ret[1][1])
+			
+			if self.initial_histogram_density*0.6 < current_histogramm_density and current_length_width_ratio in range(0.5, 2) and ratio_lastWH_and_currentWH in range(0.5,2):
 				self.ret = tmp_ret
 				self.track_window = tmp_track_window
 				self.pts = tmp_pts
 				self.border_color = (0,255,0)
+				success = True
 			else:
 				self.border_color = (255,0,0)
+				success = False
 
 			if self.pts != None:
 				self.img2 = camImage.copy()
@@ -80,7 +99,7 @@ class CamShift(object):
 				self.middleX = int(self.ret[0][0])
 				self.middleY = int(self.ret[0][1])
 				cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
-				return self.img2, self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1])
+				return success, self.img2, self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1])
 			
 			else:
 				return camImage, 0, 0, 0

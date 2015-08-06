@@ -36,53 +36,17 @@ def get_picture():
         return frame
     return drone.get_image()
     
-#Aktion ausgeben
-def webcam_action(action):
-    print "Doing", action
 
-#Switch für Dronenkommandos
-def drone_action(action):
-    global drone
-    if action == "w":
-        drone.move_forward()
-    elif action == "a":
-        drone.move_left()
-    elif action == "s":
-        drone.move_backward()
-    elif action == "d":
-        drone.move_right()
-    elif action == "q":
-        drone.move_up()
-    elif action == "e":
-        drone.move_down()
-    elif action == "l":
-        drone.land()
-    elif action == "h":
-        drone.hover()
-    elif action == "j":
-        drone.turn_left()
-    elif action == "k":
-        drone.turn_right()
-    
-#Eine Aktion durchführen. Je nach Umgebung wird die Aktion ausgegeben oder ausgeführt
-def do_action(action):
-    global drone
-    global uses_webcam
-    if uses_webcam:
-        webcam_action(action)
-    else:
-        drone_action(action)
-    
-def flip_direction(dir):
+
     
 
 #Drone initialisieren und starten
-def init():
+def init_session():
     global drone
     
     drone = libardrone.ARDrone(1, 0) #don't need HD video
     drone.set_camera_view(0)
-    drone-set_speed(0.4)
+    drone.set_speed(0.4)
     
     drone.takeoff()
     time.sleep(2)
@@ -91,16 +55,22 @@ def init():
 def find_line():
     global has_line
     global drone
-    stop = time.time() + 10
-    direction = "r"
-    do_action("r")    
+    pid.movement(drone)
+    time.sleep(5)
+    drone.hover()
     
-    while time.time() < stop:
+def follow_line():
+    global has_line
+    global drone
+    if has_line:
+        print "following"
+    else:
+        find_line()
         
-        
+#Landet und wartet. Zuletzt wird die Verbindung getrennt (und der Port freigegeben)
 def end_session():
     global drone
     drone.land()
-    time.sleep(2)
+    time.sleep(4)
     drone.halt()
         

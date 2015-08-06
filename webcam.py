@@ -13,6 +13,22 @@ import math
 
 cap = cv2.VideoCapture(0)
 
+def middle(start, end, a, b):
+    x0, y0 = start
+    xn, yn = end
+    in_range = None
+    num_in_range = 0
+    while x0 < xn and y0 < yn:
+        x0 += a
+        y0 += b
+        if x0 >= 0 and y0 >= 0 and x0 <= 320 and y0 <= 180:
+            if in_range == None:
+                in_range = (x0, y0)
+            num_in_range += 1
+    xl, yl = in_range
+    return (xl + (-b) * num_in_range, yl + a * num_in_range)
+            
+
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -46,12 +62,16 @@ while(True):
             a = abs(np.cos(theta))
             b = np.sin(theta)
             
+            
+            x = a * rho
+            
             if theta < math.pi / 2:
                 b = -b
                 
             w, h, d = frame.shape
             
             cv2.line(frame, (int(w/2), int(h/2)), (int(w/2+b*1000), int(h/2-a*1000)), (255, 0, 255))
+            cv2.line(edges, (int(a*rho), int(b*rho)), (int(x), 1000), (255, 255, 255))
             lr = str(b / 3)
             rb = str(-a / 3)
             font = cv2.FONT_HERSHEY_SIMPLEX

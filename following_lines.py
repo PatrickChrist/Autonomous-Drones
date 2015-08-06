@@ -8,6 +8,7 @@ Created on Thu Aug  6 13:06:11 2015
 import libardrone.libardrone as libardrone
 import cv2
 import numpy as np
+import time
 
 #variables
 running = True
@@ -26,15 +27,22 @@ optimum_r = 0 #no rotation por favor
 buffer_counter = 0
 buffer_distance = 10
 
+
 # init da drone
 drone=libardrone.ARDrone(1,1) #initalize the Drone Object
 print 'battery:', drone.navdata[0]['battery']
 
+
+buffer_time = time.time()
 while running:
     try:
 # get image
         pixelarray = drone.get_image() # get an frame form the Drone
         buffer_counter += 1
+        if time.time() - buffer_time >= 1:
+            print "fps:", buffer_counter
+            buffer_counter = 0
+            buffer_time = time.time()
         # check whether the frame is not empty, only take every nth picture
         if pixelarray != None and buffer_counter % buffer_distance == 0: 
             frame = pixelarray[:, :, ::-1].copy() #convert to a frame

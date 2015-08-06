@@ -20,12 +20,12 @@ line_in_sight = False
 speed = 0 #forward movement
 gain_x = 0.3 #horizontal gain
 gain_z = 0.3 #vertical_gain
-gain_r = 0.3 #rotation gain
 # optimum
 optimum_x = 160 #center in the middle of 320px frame
 optimum_z = 800 #keep height at 80cm
-optimum_r = 0 #no rotation por favor
 #image buffer
+buffer_counter = 0
+buffer_distance = 10
 buffer_image = None
 
 # init da drone
@@ -40,8 +40,12 @@ while running:
         pixelarray = drone.get_image() # get an frame form the Drone
         
         buffer_counter += 1
-#  
+#        if time.time() - buffer_time >= 1:
+#            #print "fps:", buffer_counter
+#            buffer_counter = 0
+#            buffer_time = time.time()
         # check whether the frame is not empty, only take every nth picture
+        #if pixelarray != None and buffer_counter % buffer_distance == 0:
         if pixelarray != None and not (np.array(pixelarray) == np.array(buffer_image)).all():
             buffer_image = pixelarray
             frame = pixelarray[:, :, ::-1].copy() #convert to a frame
@@ -79,18 +83,16 @@ while running:
                     z = drone.navdata[0]['altitude']
 # corrections
                     #check speed maybe?                    
-                    correct_x = -(x - optimum_x) / optimum_x * gain_x
+                    correct_x = (x - optimum_x) / optimum_x * gain_x
                     correct_z = (optimum_z - z) / optimum_z * gain_z
-                    correct_r = -(slope - optimum_r) * gain_r
 # print to console
                     
                     print_x = 'right   ' if correct_x > 0 else 'left    '
                     print_z = 'up    ' if correct_z > 0 else 'down  '
-                    print_r = 'rotate right' if correct_r > 0 else 'rotate left '
-                    print print_x, correct_x, print_z, correct_z, print_r, correct_r
-                    #print 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
+                    print print_x, correct_x, print_z, correct_z
+                    #rint 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
 #call the drone
-                    drone.at(libardrone.at_pcmd, True, correct_x, -speed, correct_z, correct_r)
+                    drone.at(libardrone.at_pcmd, True, float(correct_x), -speed, 0, 0)
 #keyboard controls
             k = cv2.waitKey(33)
             if k == 27: #stop with esc
@@ -120,6 +122,9 @@ while running:
                 drone.turn_left()
             elif k == 63235:
                 drone.turn_right()
+                
+            elif k == ord('q'):
+                drone.at(libardrone.at_pcmd, True, 0, -0.2, 0, 0)
             
             #hover on h
             elif k == ord('h'):

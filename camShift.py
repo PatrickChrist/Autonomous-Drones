@@ -10,6 +10,14 @@ def boxPoints(ret):
 		return cv2.cv.BoxPoints(ret)
 
 class CamShift(object):
+	def get_current_histogram_density(self, ret, pts):
+		mask = np.zeros(self.dst.shape, np.uint8)
+		cv2.fillPoly(mask, [pts], (255, 255, 255))
+		mask = mask/255
+		masked_dst = cv2.bitwise_and(self.dst.copy(), mask)
+		denstity_mask_sum = masked_dst.sum()
+		return int(denstity_mask_sum/(ret[0][0]+ret[0][1]))
+
 	def __init__(self,c,r,w,h,initialCamImage):
 
 		# take first frame of the video
@@ -26,65 +34,59 @@ class CamShift(object):
 		cv2.normalize(self.roi_hist,self.roi_hist,0,255,cv2.NORM_MINMAX)
 
 		# Setup the termination criteria, either 10 iteration or move by atleast 1 pt
-		self.term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
+		self.term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
 
 		self.middleX = 0
 		self.middleY = 0
-		self.pts = []
 
+		self.skip_commands = False
+		self.initial_histogram_density = None
+		self.pts = None
+		self.ret = None
 
 
 	def performCamShift(self, camImage):
-		self.frame = camImage
 
-		if self.frame != None and self.frame != []:
-			self.hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
+		if camImage != None and camImage != []:
+			self.hsv = cv2.cvtColor(camImage, cv2.COLOR_BGR2HSV)
 			self.dst = cv2.calcBackProject([self.hsv],[0],self.roi_hist,[0,180],1)
-			
-			# Thresholden / dichte bestimmen
-			if self.pts != []:
-				self.mask = np.zeros(self.dst.shape, np.uint8)
-				cv2.fillPoly(self.mask, [self.pts], (255, 255, 255))
-				self.mask = self.mask/255
-				self.masked_dst = cv2.bitwise_and(self.dst.copy(), self.mask)
-				self.sum = self.masked_dst.sum()
-				print self.sum
 
 			# apply meanshift to get the new location
-			self.ret, self.track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)
+			tmp_ret, tmp_track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)
+			tmp_pts = boxPoints(tmp_ret)
+			tmp_pts = np.int0(tmp_pts)
 
-			# Draw rectangle on image
-			self.pts = boxPoints(self.ret)
-			self.pts = np.int0(self.pts)
-			self.img2 = self.frame.copy()
-			cv2.polylines(self.img2,[self.pts],True, 255,2)
+			# calc density
+			if self.initial_histogram_density == None:
+				self.initial_histogram_density = self.get_current_histogram_density(tmp_ret, tmp_pts)
+			
+			current_histogramm_density = self.get_current_histogram_density(tmp_ret, tmp_pts)
+			current_length_width_ratio = tmp_ret[1][0]/float(tmp_ret[1][1])
+			if self.initial_histogram_density*0.6 < current_histogramm_density and current_length_width_ratio>0.5 and current_length_width_ratio<2 :
+				self.ret = tmp_ret
+				self.track_window = tmp_track_window
+				self.pts = tmp_pts
+				self.border_color = (0,255,0)
+			else:
+				self.border_color = (255,0,0)
 
-			# Draw middlepunkt on image
-			self.middleX = int(self.ret[0][0])
-			self.middleY = int(self.ret[0][1])
-			cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
+			if self.pts != None:
+				self.img2 = camImage.copy()
 
-			return self.img2, self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1])
+				# Draw rectangle on image
+				cv2.polylines(self.img2, [self.pts], True, self.border_color, 2)
+
+				# Draw middlepunkt on image
+				self.middleX = int(self.ret[0][0])
+				self.middleY = int(self.ret[0][1])
+				cv2.circle(self.img2,(self.middleX, self.middleY), 2, (10,255,255))
+				return self.img2, self.middleX, self.middleY, min(self.ret[1][0], self.ret[1][1])
+			
+			else:
+				return camImage, 0, 0, 0
 
 		else:
-			raise NameError('ret is false')
+			print 'No cam Image'
 	 
 	def close(self):
 	 	cv2.destroyAllWindows()
-
-
-
-"""capture = cv2.VideoCapture(0)
-cs = CamShift(250,90,400,125, capture, callbackMethod)
-while(1):
-	try:
-
-		key = cv2.waitKey(60) & 0xff
-		if key == 27:
-			break
-		else:
-			cs.performCamShift()
-
-	except:
-		cs.close()
-cs.close()"""

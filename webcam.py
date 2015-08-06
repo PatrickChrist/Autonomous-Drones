@@ -26,7 +26,7 @@ def middle(start, end, a, b):
                 in_range = (x0, y0)
             num_in_range += 1
     xl, yl = in_range
-    return (xl + (-b) * num_in_range, yl + a * num_in_range)
+    return (xl + (-b) * (num_in_range / 2), yl + a * (num_in_range / 2))
             
 
 while(True):

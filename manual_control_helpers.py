@@ -7,17 +7,25 @@ Created on Tue Aug 04 21:11:26 2015
 
 import cv2
 import time
+import libardrone.libardrone as libardrone
+
 
 action_duration = 0.5
+
+def make_drone():
+    drone = libardrone.ARDrone(1, 1)
+    drone.set_camera_view(0)
+    return drone
+
+
+def test_config():
+	global drone
+	print drone
 
 def show_img(img):
     cv2.imshow('image', img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-def test_config():
-	global drone
-	print drone
 
 # one function to move them all
 def drone_move(action, iterations=1):

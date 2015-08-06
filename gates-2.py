@@ -7,11 +7,12 @@ Created on Wed Aug 05 09:21:03 2015
 
 import cv2
 import numpy as np
-import libardrone.libardrone as libardrone
 import threading
 import time
 from manual_control_helpers import *
 
+drone = make_drone()
+print drone
 
 def decision(img):
     
@@ -131,17 +132,15 @@ def webcam_test():
         cv2.destroyAllWindows()
 
 def drone_test():
-    global drone
-
-    drone = libardrone.ARDrone(1, 1)
-    drone.set_camera_view(0)
+    
+    
     if drone.navdata[0]['battery'] < 20:
         print 'battery empty'
     else:
         print 'battery:', drone.navdata[0]['battery']
     
     #if online:
-    drone.takeoff()
+    #drone.takeoff()
     
     
 

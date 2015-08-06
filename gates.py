@@ -111,11 +111,10 @@ def webcam_test():
         #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
             # Display the resulting frame
+        #if frame != None:
         cv2.imshow('frame',frame)
         
         k = cv2.waitKey(1)
-        
-        print_action(decision(frame))
         
         if k == ord('q'):
             break

@@ -73,7 +73,8 @@ def fly():
     #variables for the circle detector
     counter,centerX,centerY, radius, inbox_width_and_height, initialEdgeLength = 0,0,0,0,0,0  
     windowHeight, windowWidth, max_ratio_window_with_to_edge, diffX_max, diffY_max, windowCenterX, windowCenterY = 480, 640, 1, 320, 240, 320, 240
-    MAX_SPEED = 0.2
+    MAX_SPEED_FWD = 0.1
+    MAX_SPEED_ROT = 0.8
     while running:
         keyPressed = True
         key = cv2.waitKey(15)
@@ -149,6 +150,7 @@ def fly():
                     drone.hover()
 
         frame = get_frame()
+        #frame = get_frame_(cap)        
         if (frame != None):
             if (keyPressed == False):
                 if (stage==1):
@@ -173,20 +175,20 @@ def fly():
                     if success:
                         if centerPtX < windowCenterX -50 :
                             ratio_normalized = (windowCenterX-centerPtX/diffX_max)
-                            drone.speed = MAX_SPEED * ratio_normalized
+                            drone.speed = MAX_SPEED_ROT * ratio_normalized
                             drone.turn_left()
                         elif centerPtX > windowCenterX + 50:
                             ratio_normalized = (centerPtX-windowCenterX/diffX_max)
-                            drone.speed = MAX_SPEED * ratio_normalized
+                            drone.speed = MAX_SPEED_ROT * ratio_normalized
                             drone.turn_right()
                         #approach or distance from target object
                         if (edgeLengthRatio > 1.25):
                             ratio_normalized = (edgeLengthRatio-1)/(max_ratio_window_with_to_edge-1)
-                            drone.spped = ratio_normalized * MAX_SPEED
+                            drone.spped = ratio_normalized * MAX_SPEED_FWD
                             drone.move_backward()
                         elif (edgeLengthRatio < 1.25):
                             ratio_normalized = 1 - edgeLengthRatio
-                            drone.speed = MAX_SPEED * ratio_normalized
+                            drone.speed = MAX_SPEED_FWD * ratio_normalized
                             drone.move_forward()
                         else:
                             drone.hover()
@@ -204,7 +206,7 @@ def get_frame():
         print "Frame grabbing failed", ex
         return None
     
-def get_frame_(cap): 
+def get_frame_(cap,stage): 
     try:
         tmpret, frame = cap.read()  # get an frame form the Drone
         return frame

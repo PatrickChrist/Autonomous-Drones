@@ -9,6 +9,9 @@ def boxPoints(ret):
 	else:
 		return cv2.cv.BoxPoints(ret)
 
+def filterHSV(hsv_img):
+	hsv_img_filtered = hsv_img
+
 class CamShift(object):
 	def get_current_histogram_density(self, ret, pts):
 		mask = np.zeros(self.dst.shape, np.uint8)
@@ -65,6 +68,8 @@ class CamShift(object):
 		if camImage != None and camImage != []:
 			self.hsv = cv2.cvtColor(camImage, cv2.COLOR_BGR2HSV)
 			self.dst = cv2.calcBackProject([self.hsv],[0],self.roi_hist,[0,180],1)
+   			#self.dst = cv2.calcBackProject([self.hsv],[0,1],self.roi_hist,[180.0,256.0],[140.0,170.0,50.0,256.0],1.0)
+
 			cv2.imshow("histo",self.dst)
 
 			"""hsv_lower_bound = np.array([0, 50, 50],np.uint8)
@@ -107,7 +112,7 @@ class CamShift(object):
 				if (tmp_ret[1][1] != 0 and self.ret[1][1] != 0):
 					ratio_lastWH_and_currentWH = (self.ret[1][0]/self.ret[1][1])/float(tmp_ret[1][0]/tmp_ret[1][1])
 			
-			if self.initial_histogram_density*0.5 < current_histogramm_density and current_length_width_ratio > 0.5 and current_length_width_ratio < 2 and ratio_lastWH_and_currentWH > 0.5 and ratio_lastWH_and_currentWH < 2:
+			if self.initial_histogram_density*0.2 < current_histogramm_density and current_length_width_ratio > 0.5 and current_length_width_ratio < 2:# and ratio_lastWH_and_currentWH > 0.5 and ratio_lastWH_and_currentWH < 2:
 				self.ret = tmp_ret
 				self.track_window = tmp_track_window
 				self.pts = tmp_pts

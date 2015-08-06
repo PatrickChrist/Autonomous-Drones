@@ -55,8 +55,8 @@ while(True):
             lr = str(b / 3)
             rb = str(-a / 3)
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(frame,'lr: ' + lr,(10,70), font, 1,(255,255,255),2,cv2.LINE_AA)
-            cv2.putText(frame,'rb: ' + rb,(10,120), font, 1,(255,255,255),2,cv2.LINE_AA)
+            cv2.putText(frame,'lr: ' + lr,(10,70), font, 1,(255,255,255),2)
+            cv2.putText(frame,'rb: ' + rb,(10,120), font, 1,(255,255,255),2)
             
     
     

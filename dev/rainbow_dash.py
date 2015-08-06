@@ -22,18 +22,12 @@ class PID:
         self.Kp = Kp
         self.Kd = Kd
         self.Ki = Ki
-        self.last_err_x = 0
-        self.last_err_y = 0 
-        self.last_err_dist = 0
+        self.last_err = 0
     
-    def action(self, err_x, err_y, err_dist):
-        out_x = self.Kp*err_x + self.Ki*(err_x+self.last_err_x) + self.Kd*(err_x-self.last_err_x)
-        out_y = self.Kp*err_y + self.Ki*(err_y+self.last_err_y) + self.Kd*(err_y-self.last_err_y)
-        out_dist = self.Kp*err_dist + self.Ki*(err_dist+self.last_err_dist) + self.Kd*(err_dist-self.last_err_dist)
-        self.last_err_x = err_x
-        self.last_err_y = err_y
-        self.last_err_dist = err_dist
-        return out_x, out_y, out_dist
+    def action(self, err):
+        out = self.Kp*err + self.Ki*(err+self.last_err) + self.Kd*(err-self.last_err)
+        self.last_err = err
+        return out
     
 def get_main_corners_from_corners(npcorners):
     return np.array([npcorners[0][0],npcorners[3][0],npcorners[16][0],npcorners[19][0]])
@@ -134,7 +128,10 @@ def main():
     #cam = cv2.VideoCapture('tcp://192.168.1.1:5555')
     
     #cam = cv2.VideoCapture(0)
-    pid = PID(0.3,0.8,0.05)
+    rotation_pid = PID(0.6,0.6,0.05)
+    height_pid = PID(0.1,0.1,0.01)
+    dist_pid = PID(0.2,0.25,0.1)
+
     print "Created VideoCapture"
     
 #    #debug video boot sequence
@@ -146,16 +143,8 @@ def main():
 #            count += 1
 #    
     running = True
-    do_flush = False
     IMC = drone.VideoImageCount
-    
-    v_f = 0.05
-    v_r = 0.12
-    v_h = 0.01
-    t_f = 0.15
-    t_r = 0.05    
-    t_h = 0.2
-    
+
     while running:    # get current frame of video   
         #running, frame = cam.read() 
         running = manual_control(drone, running)
@@ -163,10 +152,6 @@ def main():
         while drone.VideoImageCount==IMC:   time.sleep(0.01)
             
         frame = drone.VideoImage
-#        
-#        if do_flush:
-#            #flush_capture_stream(cam)
-#            do_flush = False
         
         if running:    
             found, corners = get_corners_from_marker(frame)
@@ -176,41 +161,12 @@ def main():
                 height, width = frame.shape[:2]
                 errx, erry = get_centroid_error(centroid, width, height)
                 errdif = get_distance_error(o_corners)
-                ox, oy, odist = pid.action(errx,erry,errdif)
+                ox = rotation_pid.action(errx)
+                oy = height_pid.action(erry)
+                odist = dist_pid.action(errdif)
                 
-#                fv = 0.0
-#                hv = 0.0
-#                rv = 0.0
-#                if(abs(errx) > t_r):
-#                    rv = np.sign(errx) * v_r
-#                if(abs(erry) > t_h):
-#                    hv = np.sign(erry) * v_h
-#                if(abs(errdif) > t_f):
-#                    fv = np.sign(errdif) * v_f
-                    
-                #print rv, hv, fv
-                #drone.move(0.0,-float(fv),-float(hv),float(rv))
                 print ox, oy, odist
-                drone.move(0.0,-0.2*float(odist),-0.5*float(oy),float(ox))
-                
-
-#                if errdif > 0.1 and errx > 0.05:
-#                    drone.move(0.0, -0.05, 0.0, 0.2)     
-#                elif errdif < -0.1 and errx > 0.05:
-#                    drone.move(0.0, 0.11, 0.0, 0.2) 
-#                elif errdif > 0.1 and errx < -0.05:
-#                    drone.move(0.0, -0.05, 0.0, -0.2) 
-#                elif errdif < -0.1 and errx < -0.05:
-#                    drone.move(0.0, 0.11, 0.0, -0.2) 
-#                elif errdif < -0.1 and abs(errx) < 0.05:
-#                    drone.move(0.0, 0.11, 0.0, 0.0)
-#                elif errdif > 0.1 and abs(errx) < 0.05:
-#                    drone.move(0.0, -0.05, 0.0, 0.0)
-#                elif abs(errdif) < 0.1 and errx > 0.05:
-#                    drone.move(0.0, 0.0, 0.0, 0.2)
-#                elif abs(errdif) < 0.1 and errx < -0.05 :
-#                    drone.move(0.0, 0.0, 0.0, -0.2)                     
-
+                drone.move(0.0,-float(odist),-float(oy),float(ox))
                     
                 cv2.circle(frame, (centroid[0][0],centroid[0][1]), 10,(255,0,0) ,1)
                 cv2.line(frame, (o_corners[0][0],o_corners[0][1]), (o_corners[1][0],o_corners[1][1]), (0,255,0),1)
@@ -230,7 +186,9 @@ def main():
                 running = False    
             else:        # error reading frame        
                 print 'error reading video feed'
-      
+        else:
+            drone.hover() # got no frame update, better hover for now
+            
     #,cam.release()
     cv2.destroyAllWindows()
     

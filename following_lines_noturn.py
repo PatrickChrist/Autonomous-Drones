@@ -51,7 +51,7 @@ while running:
             frame = pixelarray[:, :, ::-1].copy() #convert to a frame
             resized = cv2.resize(frame, (320, 180)) #resize image
             # display the image
-            cv2.imshow('Drone', resized) # show the frame
+            
 # image conversion 
             #convert BGR to HSV
             hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
@@ -77,6 +77,18 @@ while running:
                 for rho,theta in lines[0]:
                     a = np.cos(theta)
                     b = np.sin(theta)
+                    
+                    if theta < math.pi / 2:
+                        b = -b
+                
+                    w, h, d = frame.shape
+            
+                    cv2.line(resized, (int(w/2), int(h/2)), (int(w/2+b*1000), int(h/2-a*1000)), (255, 0, 255))
+                    lr = str(b / 3)
+                    rb = str(-a / 3)
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(resized,'lr: ' + lr,(10,70), font, 1,(255,255,255),2)
+                    cv2.putText(resized,'rb: ' + rb,(10,120), font, 1,(255,255,255),2)
 # inputs
                     x = a * rho
                     slope = b / a
@@ -92,8 +104,11 @@ while running:
                     print print_x, correct_x, print_z, correct_z
                     #rint 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
 #call the drone
-                    drone.at(libardrone.at_pcmd, True, float(correct_x), -speed, 0, 0)
+                    drone.at(libardrone.at_pcmd, True, float(lr), -speed, 0, 0)
 #keyboard controls
+                    
+            cv2.imshow('Drone', resized) # show the frame                    
+                    
             k = cv2.waitKey(33)
             if k == 27: #stop with esc
                 running = False

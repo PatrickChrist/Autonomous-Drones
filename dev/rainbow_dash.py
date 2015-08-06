@@ -12,7 +12,7 @@ import numpy as np
 
 # FUCKING GLOBALS YEE
 pattern_size = (4, 5)
-distance_best = [55, 75]
+distance_best = [65, 85]
 
 ##FLIGHT MODE###
 
@@ -100,12 +100,23 @@ def manual_control (drone, running):
         running_internal = False
         drone.land()
         #return key
-    return running_internal 
-    
+    return running_internal
+
+def flush_capture_stream(cam):
+    delay = 0
+    t0 = 0
+    t1 = 0
+    #print doing flush
+    while delay < 15:
+        t0 = time.time()
+        cam.grab()
+        t1 = time.time()
+        delay = (t1 - t0) * 1000
+        
 def main():
     drone = start_up_drone()
     drone.sdVideo()             
-    drone.videoFPS(30)                      
+    drone.videoFPS(20)                      
     drone.frontCam()                                             # Choose front view
 
     drone.trim()
@@ -124,9 +135,14 @@ def main():
 #            count += 1
 #    
     running = True
+    do_flush = False
     while running:    # get current frame of video   
         running, frame = cam.read() 
         running = manual_control(drone, running)
+        
+        if do_flush:
+            #flush_capture_stream(cam)
+            do_flush = False
         
         if running:    
             found, corners = get_corners_from_marker(frame)
@@ -136,7 +152,7 @@ def main():
                 height, width = frame.shape[:2]
                 errx, erry = get_centroid_error(centroid, width, height)
                 out_x,out_y = pid.action(errx,erry)
-                print erry, out_y
+               # print erry, out_y
                 
                 errdif = get_distance_error(o_corners)
 #                if errx > 0:
@@ -170,6 +186,7 @@ def main():
             if not found:
                 print 'chessboard not found'
                 drone.hover()
+                do_flush = True
                 continue
             
             cv2.imshow('frame', frame)  
@@ -177,7 +194,7 @@ def main():
             if cv2.waitKey(1) & 0xFF == 27:             # escape key pressed            
                 running = False    
             else:        # error reading frame        
-    		print 'error reading video feed'
+                print 'error reading video feed'
       
     cam.release()
     cv2.destroyAllWindows()

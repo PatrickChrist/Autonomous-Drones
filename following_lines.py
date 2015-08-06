@@ -9,10 +9,13 @@ import libardrone.libardrone as libardrone
 import cv2
 import numpy as np
 import time
+import sys
+
 
 #variables
 running = True
 flying = False
+loop = False
 line_in_sight = False
 # operational
 speed = 0 #forward movement
@@ -26,7 +29,7 @@ optimum_r = 0 #no rotation por favor
 #image buffer
 buffer_counter = 0
 buffer_distance = 10
-
+buffer_image = None
 
 # init da drone
 drone=libardrone.ARDrone(1,1) #initalize the Drone Object
@@ -38,13 +41,16 @@ while running:
     try:
 # get image
         pixelarray = drone.get_image() # get an frame form the Drone
+        
         buffer_counter += 1
-        if time.time() - buffer_time >= 1:
-            print "fps:", buffer_counter
-            buffer_counter = 0
-            buffer_time = time.time()
+#        if time.time() - buffer_time >= 1:
+#            #print "fps:", buffer_counter
+#            buffer_counter = 0
+#            buffer_time = time.time()
         # check whether the frame is not empty, only take every nth picture
-        if pixelarray != None and buffer_counter % buffer_distance == 0: 
+        #if pixelarray != None and buffer_counter % buffer_distance == 0:
+        if pixelarray != None and not (np.array(pixelarray) == np.array(buffer_image)).all():
+            buffer_image = pixelarray
             frame = pixelarray[:, :, ::-1].copy() #convert to a frame
             resized = cv2.resize(frame, (320, 180)) #resize image
             # display the image
@@ -64,11 +70,11 @@ while running:
             #convert colors
             gray = cv2.cvtColor(blur, cv2.COLOR_HSV2BGR)
             gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
-            edges = cv2.Canny(blur,50,150,apertureSize = 3)
+            edges = cv2.Canny(blur,50,150,apertureSize = 3) 
             #find lines
             lines = cv2.HoughLines(edges,1,np.pi/180,50)
 # decisions
-            if lines is not None:
+            if lines is not None and loop:
 #TODO search for the line
             
                 for rho,theta in lines[0]:
@@ -91,7 +97,7 @@ while running:
                     print print_x, correct_x, print_z, correct_z, print_r, correct_r
                     #print 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
 #call the drone
-                    drone.at(drone.at_pcmd, correct_x, -speed, correct_z, correct_r)
+                    drone.at(libardrone.at_pcmd, True, correct_x, -speed, correct_z, correct_r)
 #keyboard controls
             k = cv2.waitKey(33)
             if k == 27: #stop with esc
@@ -110,11 +116,11 @@ while running:
             elif k == ord('w'):
                 drone.move_forward()
             elif k == ord('s'):
-                drone.move_back()
+                drone.move_backward()
                 
             # arrow keys for up/down/rotate
             elif k == 63232:
-                drone.move_up
+                drone.move_up()
             elif k == 63233:
                 drone.move_down()
             elif k == 63234:
@@ -127,10 +133,13 @@ while running:
                 drone.hover()
             #speed adjustment on i & o
             elif k == ord('i'):
-                speed += 0.1
+                speed += 0.05
                 print 'speed:', -speed
             elif k == ord('o'):
-                speed -= 0.1
+                speed -= 0.05
                 print 'speed:', -speed
-    except:
-        print ""  
+            # start with p
+            elif k == ord('p'):
+                loop = True 
+    except ValueError as e:
+        print e

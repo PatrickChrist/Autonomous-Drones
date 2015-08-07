@@ -75,6 +75,11 @@ def fly():
     windowHeight, windowWidth, max_ratio_window_with_to_edge, diffX_max, diffY_max, windowCenterX, windowCenterY = 480, 640, 1, 320, 240, 320, 240
     MAX_SPEED_FWD = 0.1
     MAX_SPEED_ROT = 0.8
+
+    do_fast = True
+    if do_fast == True:
+        MAX_SPEED_FWD = 0.25
+        MAX_SPEED_ROT = 1
     while running:
         keyPressed = True
         key = cv2.waitKey(15)

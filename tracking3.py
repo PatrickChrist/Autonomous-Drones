@@ -6,7 +6,7 @@ import camShift
 ALLOWED_RADIUS_CHANGE = 30
 ALLOWED_CENTER_SHIFT = 40
 MIN_NUM_CONSECUTIVE_MATCHES = 7
-MIN_RADIUS_OF_CIRCLES = 50
+MIN_RADIUS_OF_CIRCLES = 20
 MIN_DISTANCE_BETWEEN_CIRCLES = 800
 
 def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
@@ -84,7 +84,6 @@ def fly():
         #   print str(key)        
         if (key==-1):
             keyPressed = False
-        #    print str(key)
         if key == 1048603 or key == 27:  # esc
             if flying:
                 drone.land()
@@ -170,7 +169,7 @@ def fly():
                 elif (stage==2):                    
                     success, frame, centerPtX, centerPtY, minWidth = camShiftHandler.performCamShift(frame)
                     currentEdgeLength = minWidth
-                    edgeLengthRatio = currentEdgeLength/initialEdgeLength #if object is farther away than at the starting time, then the ratio is > 0
+                    edgeLengthRatio = currentEdgeLength/initialEdgeLength #if object is farer away than at the starting time, then the ratio is > 0
                     #rotation
                     if success:
                         if centerPtX < windowCenterX -50 :
@@ -182,13 +181,13 @@ def fly():
                             drone.speed = MAX_SPEED_ROT * ratio_normalized
                             drone.turn_right()
                         #approach or distance from target object
-                        if (edgeLengthRatio > 1.25):
+                        if (edgeLengthRatio > 1.20):
                             ratio_normalized = (edgeLengthRatio-1)/(max_ratio_window_with_to_edge-1)
-                            drone.spped = ratio_normalized * MAX_SPEED_FWD
+                            drone.spped = MAX_SPEED_FWD * ratio_normalized * 0.45
                             drone.move_backward()
                         elif (edgeLengthRatio < 1.25):
                             ratio_normalized = 1 - edgeLengthRatio
-                            drone.speed = MAX_SPEED_FWD * ratio_normalized
+                            drone.speed = MAX_SPEED_FWD * ratio_normalized * 1.2
                             drone.move_forward()
                         else:
                             drone.hover()

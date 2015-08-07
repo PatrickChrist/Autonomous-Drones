@@ -18,7 +18,7 @@ flying = False
 loop = False
 line_in_sight = False
 # operational
-speed_ratio = 40 #speed 1/n
+speed_ratio = 50 #speed 1/n
 angle_change = 0.005 #constant to navigate towards the line on x-axis
 gain_x = 0.3 #horizontal gain
 gain_z = 0.3 #vertical_gain
@@ -57,6 +57,7 @@ while running:
             buffer_image = pixelarray
             frame = pixelarray[:, :, ::-1].copy() #convert to a frame
             resized = cv2.resize(frame, (320, 180)) #resize image
+            
             # display the image
             
 # image conversion 
@@ -85,42 +86,37 @@ while running:
                 
                     a = np.cos(theta)
                     b = np.sin(theta)
-                    x = a * rho
-                    y = b * rho
-                    # fake theta
-                    print 'theta:', theta, 'rho', rho 
-                    """if x < optimum_x - threshold_x:
-                        theta -= angle_change
-                        theta_delta = -angle_change
-                        hovered = False
-                    elif x > optimum_x + threshold_x:
-                        theta += angle_change
-                        theta_delta = angle_change
-                        hovered = False
-                    elif not hovered:
-                        drone.hover()
-                        time.sleep(1)
-                        hovered = True"""
-                    #a = np.cos(theta)
-                    #b = np.sin(theta)
+                    #x = a * rho
+                    #y = b * rho
+                    #rho = abs(rho)
+                    if rho > 180:
+                        a_prime = np.cos(theta + math.pi / 4)
+                        b_prime = np.sin(theta + math.pi / 4)
+                    else:
+                        a_prime = np.cos(theta - math.pi / 4)
+                        b_prime = np.sin(theta - math.pi / 4)
+                    #a_new = abs(a) + a_prime * angle_change * (rho / 160 - 1)
+                    #b_new = b + b_prime * angle_change * (rho / 160 - 1)
+                    #print 'theta:', theta, 'rho', rho 
+                    print rho
                     
                     if theta < math.pi / 2:
                         b = -b
                 
-                    w, h, d = frame.shape
+                    #w, h, d = frame.shape
             
-                    lr = str(b / speed_ratio)
-                    rb = str(abs(a) / speed_ratio)
+                    lr = b / speed_ratio
+                    fb = a / speed_ratio
                     
 # inputs
-                    
+                    theta = abs(theta)
                     slope = b / a
                     z = drone.navdata[0]['altitude']
 # corrections
                     #check speed maybe?                    
-                    correct_x = (x - optimum_x) / optimum_x * gain_x
-                    
+                    #correct_x = (x - optimum_x) / optimum_x * gain_x
                     correct_z = (optimum_z - z) / optimum_z * gain_z
+                    
 # print to console
                     
                     #print_x = 'right   ' if correct_x > 0 else 'left    '
@@ -128,7 +124,7 @@ while running:
                     #print print_x, correct_x, print_z, correct_z
                     #print 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
 #call the drone
-                    drone.at(libardrone.at_pcmd, True, -float(lr), -float(rb), correct_z, 0)
+                    drone.at(libardrone.at_pcmd, True, -float(lr), -float(fb), correct_z, 0)
 
 #keyboard controls
                     

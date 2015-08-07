@@ -13,49 +13,7 @@ import math
 
 cap = cv2.VideoCapture(0)
 
-def middle(start, end, a, b):
-    x0, y0 = start
-    xn, yn = end
-    print start
-    print end
-    print a
-    print b
-    in_range = None
-    num_in_range = 0
-    while x0 < xn and y0 < yn:
-        x0 -= b
-        y0 += a
-        if x0 >= 0 and y0 >= 0 and x0 <= 320 and y0 <= 180:
-            if in_range == None:
-                in_range = (x0, y0)
-            num_in_range += 1
-    if in_range != None:
-        xl, yl = in_range
-        return (xl + (-b) * (num_in_range / 2), yl + a * (num_in_range / 2))
-    return (0, 0)
-            
-def middle(start, end, a, b):
-    x0, y0 = start
-    xn, yn = end
-    print start
-    print end
-    print a
-    print b
-    in_range = None
-    out_range = None
-    num_in_range = 0
-    while x0 < xn and y0 < yn:
-        x0 -= b
-        y0 += a
-        if x0 >= 0 and y0 >= 0 and x0 <= 320 and y0 <= 180:
-            if in_range == None:
-                in_range = (x0, y0)
-            num_in_range += 1
-            out_range = (x0, y0)
-    if in_range != None:
-        xl, yl = in_range
-        return (xl + (-b) * (num_in_range / 2), yl + a * (num_in_range / 2))
-    return (0, 0)
+
 
 
 while(True):

@@ -18,10 +18,10 @@ X_LOWER = -70
 X_UPPER = 70
 Y_LOWER = 40
 Y_UPPER = 45
-Y_CENTER = (Y_UPPER + Y_LOWER) / 2
+Y_CENTER = (Y_UPPER + Y_LOWER) / 2.0
 Z_LOWER = -70
-Z_UPPER = 10
-Z_CENTER = (Z_UPPER + Z_LOWER) / 2
+Z_UPPER = 20
+Z_CENTER = (Z_UPPER + Z_LOWER) / 2.0
 
 class AF(object):
     def __init__(self, video_src, window_name,drone, interface):
@@ -78,7 +78,7 @@ class AF(object):
 
     def steer_to(self, right, down, size):
         facesize = (size[0] + size[1]) / 2.0
-        command, speed = self.controller.adjust(right, size, down)
+        command, speed = self.controller.adjust(right, facesize, down)
         self.interface.steer_autonomous(command, speed)
         # print down, facesize
         # if right < X_LOWER:
@@ -277,9 +277,9 @@ class Pcontroller:
 
     def adjust(self, x, y, z):
         if x < X_LOWER:
-            return "turnleft", bound(abs(x) / 320.0 * 0.5)
+            return "turnleft", bound(abs(x) / 320.0 * 0.6)
         elif x > X_UPPER:
-            return "turnright", bound(abs(x) / 320.0 * 0.5)
+            return "turnright", bound(abs(x) / 320.0 * 0.6)
         elif z < Z_LOWER:
             return "up", bound(abs(z - Z_CENTER) / 160.0 * 0.9)
         elif z > Z_UPPER:
@@ -291,14 +291,21 @@ class Pcontroller:
         else:
             return "hover", 0.3
 
-def xnorm(x):
-    return abs(x) / 320.0
+XMAX = 320.0
+YMAX = 50.0
+ZMAX = 160.0
 
-def ynorm(y):
-    return abs(y - Y_CENTER) / 30.0
+def xnorm(x, doabs = True):
+    v = x / XMAX
+    return abs(v) if doabs else v
 
-def znorm(z):
-    return abs(z - Z_CENTER) / 160.0
+def ynorm(y, doabs = True):
+    v = (y - Y_CENTER) / YMAX
+    return abs(v) if doabs else v
+
+def znorm(z, doabs = True):
+    v = (z - Z_CENTER) / ZMAX
+    return abs(v) if doabs else v
 
 class PDcontroller:
     def __init__(self):
@@ -306,40 +313,97 @@ class PDcontroller:
         self.lastxs = collections.deque(maxlen=history)
         self.lastys = collections.deque(maxlen=history)
         self.lastzs = collections.deque(maxlen=history)
-        self.kp = 0.05
-        self.kd = 0.05
+        self.kp = 0.5
+        self.kd = 0.5
 
     def adjust(self, x, y, z):
+        x = xnorm(x, False)
+        y = ynorm(y, False)
+        z = znorm(z, False)
+
         self.lastxs.append(x)
         self.lastys.append(y)
         self.lastzs.append(z)
 
-        dx, dy, dz = self.foldingavg([x, y, z])
+        dx, dy, dz = self.foldingavg([list(self.lastxs), list(self.lastys), list(self.lastzs)])
         vx, vy, vz = self.calc([(x, dx), (y, dy), (z, dz)])
 
-        if x < X_LOWER:
-            return "turnleft", bound(vx, 0.5)
-        elif x > X_UPPER:
+        print vx, vy, vz
+        if vx < -0.15:
+            print "left", abs(vx)
+            return "turnleft", bound(abs(vx), 0.5)
+        elif vx > 0.15:
+            print "right", vx
             return "turnright", bound(vx, 0.5)
-        elif z < Z_LOWER:
-            return "up", bound(vz, 0.7)
-        elif z > Z_UPPER:
+        elif vz < -0.3:
+            print "up", abs(vz)
+            return "up", bound(abs(vz), 0.7)
+        elif vz > 0.3:
+            print "down", vz
             return "down", bound(vz, 0.7)
-        elif y > Y_UPPER:  # too big, move away
+        elif vy > 0.07:  # too big, move away
+            print "back", vy
             return "backward", bound(vy, 0.2)
-        elif y < Y_LOWER:
-            return "forward", bound(vy, 0.2)
+        elif vy < 0.07:
+            print "for", abs(vy)
+            return "forward", bound(abs(vy), 0.2)
         else:
             return "hover", 0.3
 
     def calc(self, values):
+        print values
         return [x * self.kp + dx * self.kd for (x, dx) in values]
 
     def foldingavg(self, lists):
         return [self.avg([a - b for a, b in zip(vlist[:-1], vlist[1:])]) for vlist in lists]
 
     def avg(self, l):
+        if len(l) == 0:
+            return 0
         return float(sum(l)) / float(len(l))
+#
+# class PDcontroller2:
+#     def __init__(self):
+#         self.lastxposition = None
+#         self.lastyposition = None
+#         self.lastzposition = None
+#         self.lasttime = None
+#
+#         self.kp = 0.5
+#         self.kd = 0.5
+#
+#     def adjust(self, x, y, z):
+#         xo = x
+#         yo = y
+#         zo = z
+#         x = xnorm(x, False)
+#         y = ynorm(y, False)
+#         z = znorm(z, False)
+#
+#         if self.lasttime is None:
+#             self.lasttime = time.clock() * 1000
+#             self.lastxposition = x
+#             self.lastyposition = y
+#             self.lastzposition = z
+#             return "hover", 0.3
+#
+#         dt_msec = self.lasttime - time.clock() * 1000
+#         dx = (self.lastxposition - x) / dt_msec
+#         dy = (self.lastxposition - y) / dt_msec
+#         dz = (self.lastxposition - z) / dt_msec
+#
+#         vx = self.kp * x - self.kd * dx
+#         vy = self.kp * y - self.kd * dy
+#         vz = self.kp * z - self.kd * dz
+#
+#         self.lasttime = time.clock() * 1000
+#         if xo < -0.2:
+#         elif xo > 0.2:
+#         elif zo < -0.15:
+#         elif zo > 0:
+#         elif yo < 0:
+#         elif yo > 0:
+
 
 class PIDcontroller:
     def __init__(self):

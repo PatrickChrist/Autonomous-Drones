@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug  6 13:06:11 2015
-
 @author: broen
 """
 
@@ -11,26 +10,61 @@ import numpy as np
 import time
 import math
 
+"""
+    controls:
+        
+        space:      take-off / land
+        l:          start line detection loop
+        h:          hover
+        p:          print altitude
+        
+        w:          forward         
+        a:          left
+        s:          down
+        d:          right
+        
+        up:         up
+        down:       down
+        left:       rotate left
+        right:      rotate right
+"""
 
-#variables
+"""
+    adjust speed_ratio for correction speed changes 
+    higher number results in slower speed
+    max speed at speed_ratio = 1
+    30 turned out to give solid results 
+"""
+speed_ratio = 30 #speed 1/n
+"""
+    rotor_speed defines takes floats from 0.0 to 1.0
+"""
+rotor_speed = 0.2
+
+"""
+    these two HSV values define the color range to detect
+    this version uses a red line
+"""
+lower_color = np.array([160,50,50], dtype=np.uint8)
+upper_color = np.array([180,255,255], dtype=np.uint8)
+
+
+# initial startup values
 running = True
 flying = False
 loop = False
+hovered = False
 line_in_sight = False
-# operational
-speed_ratio = 25 #speed 1/n
-angle_change = 0.00001 #constant to navigate towards the line on x-axis
+# navigation constant towards the line
+angle_change = 0.00001
 gain_x = 0.3 #horizontal gain
 gain_z = 0.3 #vertical_gain
-# optimum
-optimum_x = 160 #center in the middle of 320px frame
-optimum_z = 650 #keep height at 80cm
-#image buffer
-buffer_counter = 0
-buffer_distance = 10
+ #center in the middle of 320px frame
+optimum_x = 160
+#keep height at 65cm
+optimum_z = 650
 buffer_image = None
-#hovering
-hovered = False
+#line threshold
 threshold_x = 40
 
 hover_timer = time.time()
@@ -43,111 +77,71 @@ print 'battery:', drone.navdata[0]['battery']
     
 while running:
     try:
-# get image
-        pixelarray = drone.get_image() # get an frame form the Drone
-        
-        buffer_counter += 1
-#        if time.time() - buffer_time >= 1:
-#            #print "fps:", buffer_counter
-#            buffer_counter = 0
-#            buffer_time = time.time()
-        # check whether the frame is not empty, only take every nth picture
-        #if pixelarray != None and buffer_counter % buffer_distance == 0:
+        #get an image from the drone
+        pixelarray = drone.get_image()
+        # buffer
         if pixelarray != None and not (np.array(pixelarray) == np.array(buffer_image)).all():
             buffer_image = pixelarray
-            frame = pixelarray[:, :, ::-1].copy() #convert to a frame
-            resized = cv2.resize(frame, (320, 180)) #resize image
-            # display the image
-            
-# image conversion 
+             #convert to a frame
+            frame = pixelarray[:, :, ::-1].copy()
+             #resize image
+            resized = cv2.resize(frame, (320, 180))
+            # image conversion 
             #convert BGR to HSV
             hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
-            # define range of blue color in HSV
-            lower_red = np.array([160,50,50], dtype=np.uint8)
-            upper_red = np.array([180,255,255], dtype=np.uint8)
             # threshold the HSV image to get only blue colors
-            mask = cv2.inRange(hsv, lower_red, upper_red)
+            mask = cv2.inRange(hsv, lower_color, upper_color)
             # bitwise-AND mask and original image
             res = cv2.bitwise_and(resized,resized, mask= mask)
             blur = cv2.GaussianBlur(res,(15,15),0)
-#line detection
+            #line detection
             #convert colors
             gray = cv2.cvtColor(blur, cv2.COLOR_HSV2BGR)
             gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
             edges = cv2.Canny(blur,50,150,apertureSize = 3) 
             #find lines
             lines = cv2.HoughLines(edges,1,np.pi/180,50)
-# decisions
+            # decisions
             if lines is not None and loop:
-#TODO search for the line
-            
-                for rho,theta in lines[0]:
-                
+                for rho,theta in lines[0]:    
                     a = np.cos(theta)
                     b = np.sin(theta)
                     x = a * rho
                     y = b * rho
                     delta_x = x/180 -1
-                    # fake theta
-                    print 'theta:', theta, 'rho', rho 
-                    """if x < optimum_x - threshold_x:
-                        theta -= angle_change
-                        theta_delta = -angle_change
-                        hovered = False
-                    elif x > optimum_x + threshold_x:
-                        theta += angle_change
-                        theta_delta = angle_change
-                        hovered = False
-                    elif not hovered:
-                        drone.hover()
-                        time.sleep(1)
-                        hovered = True"""
-                    #a = np.cos(theta)
-                    #b = np.sin(theta)
-                    
                     if theta < math.pi / 2:
                         b = -b
-                    
                     # x component
                     x_correction = delta_x * angle_change
                     x_lr = x_correction * b
                     x_fb = x_correction * a
                     lr = str(b / speed_ratio)
                     fb = str(abs(a) / speed_ratio)
-                    print 'steuerung:', lr, 'x', x_lr
-                    
-# inputs
-                    
+                    # inputs
                     slope = b / a
                     z = drone.navdata[0]['altitude']
-# corrections
-                    #check speed maybe?                    
+                    # corrections
                     correct_x = (x - optimum_x) / optimum_x * gain_x
-                    
                     correct_z = (optimum_z - z) / optimum_z * gain_z
-# print to console
-                    
-                    #print_x = 'right   ' if correct_x > 0 else 'left    '
-                    #print_z = 'up    ' if correct_z > 0 else 'down  '
-                    #print print_x, correct_x, print_z, correct_z
-                    #print 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
-#call the drone
+                    #call the drone
                     drone.at(libardrone.at_pcmd, True, -float(lr), -float(fb), correct_z, 0)
-
-#keyboard controls
-            drone.set_speed(0.2)
-            cv2.imshow('Drone', resized) # show the frame                    
                     
+            #user interface
+            drone.set_speed(rotor_speed)
+            #show the frame 
+            cv2.imshow('Drone', resized)                   
+            #keyboard controls
             k = cv2.waitKey(33)
             if k == 27: #stop with esc
                 running = False
-            elif k == 32: # start/stop with space bar
+            elif k == 32: # start/land with space bar
                 if flying:
                     drone.land()
                 else:
                     drone.takeoff()
                 flying = not flying
-                # wasd for front/back/left/right 
+                
+            # wasd for front/back/left/right 
             elif k == ord('a'): 
                 drone.move_left()
             elif k == ord('d'):
@@ -166,9 +160,6 @@ while running:
                 drone.turn_left()
             elif k == 63235:
                 drone.turn_right()
-                
-            elif k == ord('q'):
-                drone.at(libardrone.at_pcmd, True, 0, -0.2, 0, 0)
             
             #hover on h
             elif k == ord('h'):

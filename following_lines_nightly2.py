@@ -93,28 +93,16 @@ while running:
 #                        #rho += 360
                     a = np.cos(theta)
                     b = np.sin(theta)
-                    x = a * rho
-                    y = b * rho
-                        
-                    a = np.cos(theta)
-                    b = np.sin(theta)
                     #x = a * rho
                     #y = b * rho
-                    #rho = abs(rho)
-                    if rho > 160:
-                        a_prime = np.cos(theta - math.pi / 4)
-                        b_prime = np.sin(theta - math.pi / 4)
-                    else:
-                        a_prime = np.cos(theta + math.pi / 4)
-                        b_prime = np.sin(theta + math.pi / 4)
-                    a_new = abs(a) + a_prime * angle_change * (rho / 160 - 1)
-                    b_new = b + b_prime * angle_change * (rho / 160 - 1)
                     
-                    
-                    if theta < math.pi / 2:
+
+                    # one flight direction
+                    if theta < math.pi / 4:
                         b = -b
-                
-                    #w, h, d = frame.shape
+                    
+                    #idee: slope = -theta
+                    # -> left / right = -theta + pi
             
                     lr = b / speed_ratio
                     fb = a / speed_ratio

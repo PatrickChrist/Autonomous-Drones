@@ -40,7 +40,7 @@ def detectCircle(sameCircleCounter,frameRGB, centerX, centerY, radius):
                 centerX = circle[0]
                 centerY = circle[1]
                 inbox_width_and_height = 2* numpy.sqrt((radius**2)/2)
-            
+                #inbox_width_and_height = 2*radius 
         #check whether the circle change is within a threshold
         if radius != 0:
             diffRadius = numpy.abs(radius-radius_prev)
@@ -170,6 +170,7 @@ def fly():
                     success, frame, centerPtX, centerPtY, minWidth = camShiftHandler.performCamShift(frame)
                     currentEdgeLength = minWidth
                     edgeLengthRatio = currentEdgeLength/initialEdgeLength #if object is farer away than at the starting time, then the ratio is > 0
+                    cv2.putText(frame, "Size ratio: " + str(edgeLengthRatio), (10,70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255))
                     #rotation
                     if success:
                         if centerPtX < windowCenterX -50 :
@@ -181,13 +182,14 @@ def fly():
                             drone.speed = MAX_SPEED_ROT * ratio_normalized
                             drone.turn_right()
                         #approach or distance from target object
-                        if (edgeLengthRatio > 1.20):
+                        if (edgeLengthRatio > 1.2):#1.20):
                             ratio_normalized = (edgeLengthRatio-1)/(max_ratio_window_with_to_edge-1)
-                            drone.spped = MAX_SPEED_FWD * ratio_normalized * 0.45
+                            drone.spped = MAX_SPEED_FWD * ratio_normalized * 0.3
                             drone.move_backward()
-                        elif (edgeLengthRatio < 1.25):
+                            #drone.hover()
+                        elif (edgeLengthRatio < 0.9):#.25): #fix: <1
                             ratio_normalized = 1 - edgeLengthRatio
-                            drone.speed = MAX_SPEED_FWD * ratio_normalized * 1.2
+                            drone.speed = MAX_SPEED_FWD * ratio_normalized * 1
                             drone.move_forward()
                         else:
                             drone.hover()
@@ -200,6 +202,8 @@ def get_frame():
     try:
         pixelarray = drone.get_image()  # get an frame form the Drone
         frame = pixelarray[:, :, ::-1].copy()  # convert to a frame
+        frame = cv2.GaussianBlur(frame,(5,5),0)        
+        frame = cv2.GaussianBlur(frame,(5,5),0)
         return frame
     except Exception, ex:
         print "Frame grabbing failed", ex

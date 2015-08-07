@@ -90,8 +90,8 @@ class CamShift(object):
 					current_length_width_ratio = tmp_ret[1][0]/float(tmp_ret[1][1])
 				else:
 					current_length_width_ratio = 0
-
-			if self.initial_histogram_density*0.2 < current_histogramm_density and current_length_width_ratio > 0.5 and current_length_width_ratio < 2:# and ratio_lastWH_and_currentWH > 0.5 and ratio_lastWH_and_currentWH < 2:
+			area =(tmp_ret[1][0]*tmp_ret[1][1])
+			if area > 400 and area < 57000:# self.initial_histogram_density*0.2 < current_histogramm_density and area > 2500:# and current_length_width_ratio > 0.5 and current_length_width_ratio < 2:# and ratio_lastWH_and_currentWH > 0.5 and ratio_lastWH_and_currentWH < 2:
 				self.ret = tmp_ret
 				self.track_window = tmp_track_window
 				self.pts = tmp_pts

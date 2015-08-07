@@ -12,7 +12,7 @@ import numpy as np
 
 # FUCKING GLOBALS YEE
 pattern_size = (4, 5)
-distance_best = [55, 75]
+distance_best = [75, 95]
 
 ##FLIGHT MODE###
 
@@ -22,15 +22,12 @@ class PID:
         self.Kp = Kp
         self.Kd = Kd
         self.Ki = Ki
-        self.last_err_x = 0
-        self.last_err_y = 0 
+        self.last_err = 0
     
-    def action(self, err_x, err_y):
-        out_x = self.Kp*err_x + self.Ki*(err_x+self.last_err_x) + self.Kd*(err_x-self.last_err_x)
-        out_y = self.Kp*err_y + self.Ki*(err_y+self.last_err_y) + self.Kd*(err_y-self.last_err_y)
-        self.last_err_x = err_x
-        self.last_err_y = err_y
-        return out_x, out_y
+    def action(self, err):
+        out = self.Kp*err + self.Ki*(err+self.last_err) + self.Kd*(err-self.last_err)
+        self.last_err = err
+        return out
     
 def get_main_corners_from_corners(npcorners):
     return np.array([npcorners[0][0],npcorners[3][0],npcorners[16][0],npcorners[19][0]])
@@ -69,6 +66,8 @@ def start_up_drone():
     drone.startup()									# Connects to drone and starts subprocesses
     drone.reset()										# Always good, at start
     
+    drone.useDemoMode(True)
+    
     while drone.getBattery()[0] == -1:	time.sleep(0.1)		      # Waits until the drone has done its reset
     time.sleep(0.5)									# Give it some time to fully awake
     
@@ -100,19 +99,39 @@ def manual_control (drone, running):
         running_internal = False
         drone.land()
         #return key
-    return running_internal 
-    
+    return running_internal
+
+def flush_capture_stream(cam):
+    delay = 0
+    t0 = 0
+    t1 = 0
+    #print doing flush
+    while delay < 25:
+        t0 = time.time()
+        cam.read()
+        t1 = time.time()
+        delay = (t1 - t0) * 1000
+        
 def main():
     drone = start_up_drone()
     drone.sdVideo()             
-    drone.videoFPS(30)                      
-    drone.frontCam()                                             # Choose front view
+    #drone.videoFPS(30)              
+    drone.fastVideo()      
+    drone.mp4Video()
+    drone.videoBitrate(250)
+    drone.frontCam()           
+    CDC = drone.ConfigDataCount
+    while CDC==drone.ConfigDataCount: time.sleep(0.001)
+    drone.startVideo()
 
     drone.trim()
-    cam = cv2.VideoCapture('tcp://192.168.1.1:5555')
+    #cam = cv2.VideoCapture('tcp://192.168.1.1:5555')
     
     #cam = cv2.VideoCapture(0)
-    pid = PID(0.5,1.0,0.15)
+    rotation_pid = PID(0.6,0.6,0.05)
+    height_pid = PID(0.1,0.1,0.01)
+    dist_pid = PID(0.2,0.25,0.1)
+
     print "Created VideoCapture"
     
 #    #debug video boot sequence
@@ -124,9 +143,15 @@ def main():
 #            count += 1
 #    
     running = True
+    IMC = drone.VideoImageCount
+
     while running:    # get current frame of video   
-        running, frame = cam.read() 
+        #running, frame = cam.read() 
         running = manual_control(drone, running)
+
+        while drone.VideoImageCount==IMC:   time.sleep(0.01)
+            
+        frame = drone.VideoImage
         
         if running:    
             found, corners = get_corners_from_marker(frame)
@@ -135,20 +160,14 @@ def main():
                 o_corners = get_main_corners_from_corners(corners)
                 height, width = frame.shape[:2]
                 errx, erry = get_centroid_error(centroid, width, height)
-                out_x,out_y = pid.action(errx,erry)
-                print erry, out_y
-                
                 errdif = get_distance_error(o_corners)
-#                if errx > 0:
-#                    drone.move(0.0, 0.0, 0.0, 0.1)     
-#                else:
-#                    drone.move(0.0, 0.0, 0.0, -0.1) 
-                if errdif > 0:
-                    drone.move(0.0, -0.1, 0.0, 0.0)     
-                else:
-                    drone.move(0.0, 0.1, 0.0, 0.0) 
+                ox = rotation_pid.action(errx)
+                oy = height_pid.action(erry)
+                odist = dist_pid.action(errdif)
+                
+                print ox, oy, odist
+                drone.move(0.0,-float(odist),-float(oy),float(ox))
                     
-                #draw inner circle
                 cv2.circle(frame, (centroid[0][0],centroid[0][1]), 10,(255,0,0) ,1)
                 cv2.line(frame, (o_corners[0][0],o_corners[0][1]), (o_corners[1][0],o_corners[1][1]), (0,255,0),1)
                 cv2.line(frame, (o_corners[1][0],o_corners[1][1]), (o_corners[3][0],o_corners[3][1]), (0,255,255),1)
@@ -158,6 +177,7 @@ def main():
             if not found:
                 print 'chessboard not found'
                 drone.hover()
+                #do_flush = True
                 continue
             
             cv2.imshow('frame', frame)  
@@ -165,9 +185,11 @@ def main():
             if cv2.waitKey(1) & 0xFF == 27:             # escape key pressed            
                 running = False    
             else:        # error reading frame        
-    		print 'error reading video feed'
-      
-    cam.release()
+                print 'error reading video feed'
+        else:
+            drone.hover() # got no frame update, better hover for now
+            
+    #,cam.release()
     cv2.destroyAllWindows()
     
 if __name__ == "__main__":

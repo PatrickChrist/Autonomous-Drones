@@ -45,8 +45,8 @@ class CamShift(object):
 		# set up the ROI for tracking
 		self.roi = self.frame[r:r+h, c:c+w]
 		self.hsv_roi =  cv2.cvtColor(self.roi, cv2.COLOR_BGR2HSV)
-		self.mask = cv2.inRange(self.hsv_roi, np.array((0., 60.,32.)), np.array((180.,255.,255.)))
-		self.roi_hist = cv2.calcHist([self.hsv_roi],[0],self.mask,[180],[0,180])
+		self.mask = cv2.inRange(self.hsv_roi, np.array((0., 60.,32.)), np.array((180.,256.,256.)))
+		self.roi_hist = cv2.calcHist([self.hsv_roi],[2],self.mask,[256],[0,256])
 		cv2.normalize(self.roi_hist,self.roi_hist,0,255,cv2.NORM_MINMAX)
 
 		# Setup the termination criteria, either 10 iteration or move by atleast 1 pt
@@ -67,25 +67,11 @@ class CamShift(object):
 
 		if camImage != None and camImage != []:
 			self.hsv = cv2.cvtColor(camImage, cv2.COLOR_BGR2HSV)
-			self.dst = cv2.calcBackProject([self.hsv],[0],self.roi_hist,[0,180],1)
+			self.dst = cv2.calcBackProject([self.hsv],[2],self.roi_hist,[0,256],1)
    			#self.dst = cv2.calcBackProject([self.hsv],[0,1],self.roi_hist,[180.0,256.0],[140.0,170.0,50.0,256.0],1.0)
 
 			cv2.imshow("histo",self.dst)
 
-			"""hsv_lower_bound = np.array([0, 50, 50],np.uint8)
-			hsv_upper_bound = np.array([180, 255, 255],np.uint8)	
-
-			maskHSV = cv2.inRange(self.hsv, hsv_lower_bound, hsv_upper_bound)
-			self.dst = cv2.bitwise_and(self.dst, self.dst, mask=maskHSV)
-			
-            mask = np.zeros(self.dst.shape, np.uint8)
-			for i in range(0,self.dst.shape[0]-1):
-				for j in range(0,self.dst.shape[1]-1):
-					if self.hsv[i][j][2] in range(50,200):
-						mask[i][j] = 1
-
-			self.dst = np.multiply(self.dst, mask)
-			"""
 			# apply meanshift to get the new location
 			tmp_ret, tmp_track_window = cv2.CamShift(self.dst, self.track_window, self.term_crit)
 			tmp_pts = boxPoints(tmp_ret)
@@ -105,13 +91,6 @@ class CamShift(object):
 				else:
 					current_length_width_ratio = 0
 
-			if self.isFirstTime or self.ret == None:
-				ratio_lastWH_and_currentWH = 1
-			else:
-				#ratio_lastWH_and_currentWH = 1
-				if (tmp_ret[1][1] != 0 and self.ret[1][1] != 0):
-					ratio_lastWH_and_currentWH = (self.ret[1][0]/self.ret[1][1])/float(tmp_ret[1][0]/tmp_ret[1][1])
-			
 			if self.initial_histogram_density*0.2 < current_histogramm_density and current_length_width_ratio > 0.5 and current_length_width_ratio < 2:# and ratio_lastWH_and_currentWH > 0.5 and ratio_lastWH_and_currentWH < 2:
 				self.ret = tmp_ret
 				self.track_window = tmp_track_window

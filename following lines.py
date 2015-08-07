@@ -18,8 +18,8 @@ flying = False
 loop = False
 line_in_sight = False
 # operational
-speed_ratio = 50 #speed 1/n
-angle_change = 0.005 #constant to navigate towards the line on x-axis
+speed_ratio = 25 #speed 1/n
+angle_change = 0.00001 #constant to navigate towards the line on x-axis
 gain_x = 0.3 #horizontal gain
 gain_z = 0.3 #vertical_gain
 # optimum
@@ -57,7 +57,6 @@ while running:
             buffer_image = pixelarray
             frame = pixelarray[:, :, ::-1].copy() #convert to a frame
             resized = cv2.resize(frame, (320, 180)) #resize image
-            
             # display the image
             
 # image conversion 
@@ -83,39 +82,49 @@ while running:
 #TODO search for the line
             
                 for rho,theta in lines[0]:
-                    #links falsch: theta zu groß, rho positiv
-                    #rechts falsch: theta zu klein, rho negativ
-#                    if theta < 1.5 and rho < 0:
-#                        theta -= 3
-#                        #rho -= 360
-#                    if theta > 1.5 and rho > 0:
-#                        theta += 3
-#                        #rho += 360
+                
                     a = np.cos(theta)
                     b = np.sin(theta)
-                    #x = a * rho
-                    #y = b * rho
+                    x = a * rho
+                    y = b * rho
+                    delta_x = x/180 -1
+                    # fake theta
+                    print 'theta:', theta, 'rho', rho 
+                    """if x < optimum_x - threshold_x:
+                        theta -= angle_change
+                        theta_delta = -angle_change
+                        hovered = False
+                    elif x > optimum_x + threshold_x:
+                        theta += angle_change
+                        theta_delta = angle_change
+                        hovered = False
+                    elif not hovered:
+                        drone.hover()
+                        time.sleep(1)
+                        hovered = True"""
+                    #a = np.cos(theta)
+                    #b = np.sin(theta)
                     
-
-                    # one flight direction
-                    if theta < math.pi / 4:
+                    if theta < math.pi / 2:
                         b = -b
                     
-                    #idee: slope = -theta
-                    # -> left / right = -theta + pi
-            
-                    lr = b / speed_ratio
-                    fb = a / speed_ratio
+                    # x component
+                    x_correction = delta_x * angle_change
+                    x_lr = x_correction * b
+                    x_fb = x_correction * a
+                    lr = str(b / speed_ratio)
+                    fb = str(abs(a) / speed_ratio)
+                    print 'steuerung:', lr, 'x', x_lr
                     
 # inputs
-                    theta = abs(theta)
+                    
                     slope = b / a
                     z = drone.navdata[0]['altitude']
 # corrections
                     #check speed maybe?                    
-                    #correct_x = (x - optimum_x) / optimum_x * gain_x
-                    correct_z = (optimum_z - z) / optimum_z * gain_z
+                    correct_x = (x - optimum_x) / optimum_x * gain_x
                     
+                    correct_z = (optimum_z - z) / optimum_z * gain_z
 # print to console
                     
                     #print_x = 'right   ' if correct_x > 0 else 'left    '
@@ -124,11 +133,9 @@ while running:
                     #print 'speed:', speed, 'x:', correct_x, 'up:', correct_z, 'rotate:', correct_r
 #call the drone
                     drone.at(libardrone.at_pcmd, True, -float(lr), -float(fb), correct_z, 0)
-                    print_leftright = 'right' if float(lr) < 0 else 'left'
-                    print print_leftright, rho, theta
 
 #keyboard controls
-                    
+            drone.set_speed(0.2)
             cv2.imshow('Drone', resized) # show the frame                    
                     
             k = cv2.waitKey(33)

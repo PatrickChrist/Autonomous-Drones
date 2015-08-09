@@ -16,11 +16,11 @@ def tuple_absolute_difference(a, b):
 
 X_LOWER = -70
 X_UPPER = 70
-Y_LOWER = 40
-Y_UPPER = 45
+Y_LOWER = 50
+Y_UPPER = 55
 Y_CENTER = (Y_UPPER + Y_LOWER) / 2.0
-Z_LOWER = -70
-Z_UPPER = 20
+Z_LOWER = -90
+Z_UPPER = -50
 Z_CENTER = (Z_UPPER + Z_LOWER) / 2.0
 
 class AF(object):
@@ -242,6 +242,10 @@ class AF(object):
                     self.steer_to(dx, dy, (fw, fh))
                     self.lastface = face
 
+            yu = size[1] / 2 + Z_UPPER
+            yl = size[1] / 2 + Z_LOWER
+            cv2.line(self.frame, (0, yu), (size[0], yu), cv.RGB(255, 0, 0), 1)
+            cv2.line(self.frame, (0, yl), (size[0], yl), cv.RGB(255, 0, 0), 1)
             cv2.imshow(self.window_name, self.frame)
             time.sleep(0.05)
 

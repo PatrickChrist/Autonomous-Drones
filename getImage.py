@@ -21,5 +21,11 @@ while running:
             if cv2.waitKey(1) & 0xFF == 27: #stop with esc
             # escape key pressed
                 running = False
+        else:
+            print "empty frame"
     except:
         print "Failed"
+        running = False
+        
+print "sending halt"
+drone.halt()

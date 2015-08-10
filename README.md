@@ -19,4 +19,4 @@ Code examples for Computer Vision and Image Processing Lecture by [Ahmad Ahmadi]
 ## Student Scripts
 Final output of the elective
 
-Autonomously follow a red line on the ground: [following_lines.py](../following_lines.py)
+Autonomously follow a red line on the ground: [following_lines.py](./following_lines.py)

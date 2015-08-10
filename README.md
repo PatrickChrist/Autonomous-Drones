@@ -16,8 +16,7 @@ Code Snippet for accessing the Videostream of Parrot ARDrone 2.0 with Anaconda, 
 ## scriptGettingStartedImages.py
 Code examples for Computer Vision and Image Processing Lecture by [Ahmad Ahmadi](http://campar.in.tum.de/Main/AhmadAhmadi) 
 
-## student scripts
+## Student Scripts
 Final output of the elective
 
-### following_lines.py
-Autonomously follow a red line on the ground
+Autonomously follow a red line on the ground: [following_lines.py](../following_lines.py)

@@ -17,6 +17,13 @@ Code Snippet for accessing the Videostream of Parrot ARDrone 2.0 with Anaconda, 
 Code examples for Computer Vision and Image Processing Lecture by [Ahmad Ahmadi](http://campar.in.tum.de/Main/AhmadAhmadi) 
 
 ## Student Scripts
-Final output of the elective
 
-Autonomously follow a red line on the ground: [following_lines.py](./following_lines.py)
+Final code of the differnet teams. Find detailed tutorials in the respective folders.
+
+| Folder | Approach |
+--------- | --------
+[flyingfury](flyingfury/README.md) | Follow human faces with your drone
+[Falco](Falco/README.md) | Follow a red line on the floor
+[rainbow_dash](rainbow_dash/README.md) | Follow a checkerboard pattern
+[myLittleDrony](myLittleDrony/README.md) | Follow a colored ball or a high intensity light source
+

@@ -13,7 +13,7 @@ The code allows a manual override of the Drone control at any time. Press any st
 - P emergency rotor stop (drop like a stone)
 - T switch back to autonomous flying after starting / manual override
 
-After startup you will see the front camera livestream in a windows. Recognized faces are illustrated by rectangular boxes. The Drone follows the first recognized face as long as it's geometry doesn't change too rapidly. This avoids trouble with non consistent face detection on most occasions. Ignored faces are drawn in blue, the followed face is drawn in red and the green line indicates the drone movement.
+After startup you will see the front camera livestream in a window. Recognized faces are illustrated by rectangular boxes. The Drone follows the first recognized face as long as it's geometry doesn't change too rapidly. This avoids trouble with non consistent face detection on most occasions. Ignored faces are drawn in blue, the followed face is drawn in red and the green line indicates the drone movement.
 
 # Background
 

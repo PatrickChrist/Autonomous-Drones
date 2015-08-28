@@ -1,6 +1,6 @@
 # My Little Drony
 
-This approach uses two different detection stages. The Drone will first search for a circle in its field of view. If a circle is found and remains roughly at the same spot for a given time, the tracking stage is initialized. For this, we use the CamShift algorithm: A rectangular region inside the circle is analyzed for its color or brightness distribution.
+This approach uses two different detection stages. The Drone will first search for a circle in its field of view, using the HoughCircle detection algorithm from OpenCV. If a circle is found and remains roughly at the same spot for a given time, the tracking stage is initialized. For this, we use the CamShift algorithm: A rectangular region inside the circle is analyzed for its color or brightness distribution.
 From this point, the image is constantly scanned for the current best match to that first identifying distribution.
 The drone will then follow the tracking object, which could, for example, be a colored ball or a flashlight.
 

@@ -9,8 +9,10 @@ follow_light = None
 
 def boxPoints(ret):
 	if (useOpenCV3 == True):
+		# if code crashes here, change useOpenCV3 property in main.py!
 		return cv2.boxPoints(ret)
 	else:
+		# if code crashes here, change useOpenCV3 property in main.py!
 		return cv2.cv.BoxPoints(ret)
 
 class CamShift(object):
